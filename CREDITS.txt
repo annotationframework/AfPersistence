@@ -1,0 +1,4 @@
+warning.png - GNU General Public License - http://www.iconlet.com/info/51375_messagebox_warning_22x22
+error.png - GNU General Public License - http://www.iconlet.com/info/51286_error_22x22
+
+check.png - Free for commercial use - http://www.iconlet.com/info/82999_checkmark_32_32x32
