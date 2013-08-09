@@ -12,13 +12,14 @@ import org.openrdf.rdf2go.RepositoryModelFactory
 import org.openrdf.repository.Repository
 import org.openrdf.repository.RepositoryConnection
 import org.openrdf.repository.sail.SailRepository
+import org.openrdf.rio.RDFFormat
 import org.openrdf.sail.memory.MemoryStore
 
 class InMemoryTripleStorePersistenceImpl implements ITripleStorePersistence {
 	
 	Repository repository;
 	Model model;
-	
+		
 	public InMemoryTripleStorePersistenceImpl() {
 		RepositoryModelFactory mf = new RepositoryModelFactory();
 		model = mf.createModel(Reasoning.owl);
@@ -29,6 +30,25 @@ class InMemoryTripleStorePersistenceImpl implements ITripleStorePersistence {
 		} catch (Exception e) {
 			System.out.println("D-----> " + e.getMessage());
 		}
+	}
+	
+	@Override
+	public String store(String username, String URL, File annotation) {
+		
+		ValueFactory f = repository.getValueFactory();
+		org.openrdf.model.URI context1 = f.createURI("http://example.org/" + annotation.name);
+		
+		RepositoryConnection connection = repository.getConnection();
+		InputStream inputRDF = new FileInputStream(annotation);
+		try {
+			connection.add(inputRDF, "http://localhost/jsonld/",RDFFormat.JSONLD, context1);
+			connection.commit();
+		} catch (Exception ex) {
+			System.out.println("parsing  failed!");
+		} finally {
+			connection.close();
+		}
+		return null;
 	}
 	
 	@Override
@@ -98,5 +118,7 @@ class InMemoryTripleStorePersistenceImpl implements ITripleStorePersistence {
 			con.close();
 		}
 	}
+
+
 
 }

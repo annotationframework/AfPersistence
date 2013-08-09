@@ -38,6 +38,7 @@ import org.springframework.web.servlet.ModelAndView
  */
 class UploadController {
 	
+	def iTripleStorePersistence
 	def springSecurityService
 	
 	/*
@@ -57,6 +58,22 @@ class UploadController {
 			}
 			user
 		}
+	}
+	
+	def persistAnnotationFile = {
+		println 'persisting... ' + params.fileName
+		def loggedUser = injectUserProfile();
+		if(params.fileName!=null) {
+			println 'persisting...'
+			File directory = new File(request.getServletContext().getRealPath("/") +
+				"uploads/users/"+loggedUser.id + "/");
+			if(directory.exists()){
+				File file = new File(request.getServletContext().getRealPath("/") +
+					"uploads/users/"+loggedUser.id + "/", params.fileName);
+				iTripleStorePersistence.store("","",file);
+			}
+		}
+		render'jo'
 	}
 	
 	def annotationFile = {
@@ -117,6 +134,7 @@ class UploadController {
 				JSONObject jsonSummary = new JSONObject();
 				Object resultExternal = mav.getModel().get("result");
 				println resultExternal;
+				jsonSummary.put("file", file.getName());
 				jsonSummary.put("total", resultExternal.get("total"));
 				jsonSummary.put("warn", resultExternal.get("warn"));
 				jsonSummary.put("error", resultExternal.get("error"));

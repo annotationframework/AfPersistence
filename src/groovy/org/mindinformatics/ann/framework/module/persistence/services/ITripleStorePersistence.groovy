@@ -27,6 +27,8 @@ import org.openrdf.model.Statement
  */
 interface ITripleStorePersistence {
 	
+	public String store(String username, String URL, File annotation);
+	
 	/**
 	 * Storage of the normalized triples encoding the annotation..
 	 * @param username		Username of the user performing the request

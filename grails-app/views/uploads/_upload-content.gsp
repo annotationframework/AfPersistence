@@ -1,17 +1,15 @@
 <div class="wrapper col3">
   	<div id="container">
   	<div class="innercontainer">
-		<div>
-	      		<div id="progress">
-		    		<div class="bar" style="width: 0%;"></div>
-				</div>
-				<div id="message"></div>
-				<div id="results" style="text-align: left;"></div>
+		<div>	
+			<div id="results" style="text-align: left;"></div>
 	  	</div>
 	</div>
 	</div>
 </div>
 	<script>
+		var fileName = '';
+	
 		$(document).ready(function() {
 			$('#fileupload').fileupload({
 				url: "${request.getContextPath()}/upload/annotationFile",
@@ -20,21 +18,32 @@
 		        dataType: 'json',
 		        singleFileUploads: true,
 		        done: function (e, data) {
-		            data.context.text('Upload finished.');
-		            var myVar = setTimeout(function(){myTimer()},500);
+		            data.context.text('Upload finished!');
+		            var myVar = setTimeout(function(){myTimer()},1000);
 		            function myTimer() {
-		            	data.context.text('');
-		            	$('#progress .bar').css(
-	    	                'width',
-	    	                 '0%'
-	    	            );
+		            	//data.context.text(' ');
+		            	//$('#validationMessage').text('');
+				    
+		            	//$('#progress .bar').fadeOut("slow");
+		            	//$('#progress .bar').css(
+	    	             //   'width',
+	    	              //   '0%'
+	    	            //);
 		            }
 		            if(data.length> 0) {
 						alert(data.length);
 		            }
+
+		            $('#uploadIcon').attr('src', '${request.getContextPath()}/images/public/amarok_share_green.png');
+
+		            $('#uploadBar').hide();
+					$('#uploadBar').css("background-color","green")
+					$('#uploadBar').fadeIn("slow");
+		            
 		            $('#results').html("");
 		            $('#results').append("<h2 style='text-align: left'>Validation Summary</h2>");
 		            $('#results').append("Validated against " + data.result.summary.total + " rules: ");
+		            fileName =  data.result.summary.file;
 		            $('#results').append("<font style='display:inline;color:green;'>Passed: " + data.result.summary.pass + "</font>, ");
 		            $('#results').append("<font style='display:inline;color:red;'>Errors: " + data.result.summary.error + "</font>, ");
 		            $('#results').append("<font style='display:inline;color:#C09853;'>Warnings: " + data.result.summary.warn + "</font>, ");
@@ -85,8 +94,46 @@
 						 });
 						 $('#results').append("<br/>");
 					};
+
+					if(data.result.summary.error>0) {
+						$('#validationIcon').attr('src', '${request.getContextPath()}/images/public/amarok_validate_red.png');
+						$('#validationMessage').text('Errors (see report below)');
+						$('#validationBar').hide();
+						$('#validationBar').css("background-color","red")
+						$('#validationBar').fadeIn("slow");
+						//$('#persistIcon').attr('src', '${request.getContextPath()}/images/public/amarok_validate_red.png');
+						$('#persistBar').hide();
+						$('#persistBar').css("background-color","gray")
+						$('#persistBar').fadeIn("slow");
+						$('#persistMessage').text('Not implemented yet...');
+					} else if(data.result.summary.warn>0) {
+						$('#validationIcon').attr('src', '${request.getContextPath()}/images/public/amarok_validate_orange.png');
+						$('#validationMessage').text('Validated with warnings (see report below)');
+						$('#validationBar').hide();
+						$('#validationBar').css("background-color","orange")
+						$('#validationBar').fadeIn("slow");
+						//$('#persistIcon').attr('src', '${request.getContextPath()}/images/public/amarok_validate_red.png');
+						$('#persistBar').hide();
+						$('#persistBar').css("background-color","gray")
+						$('#persistBar').fadeIn("slow");
+						$('#persistMessage').text('Not implemented yet...');
+						$('#persistButtonPanel').fadeIn('slow');
+					} else {
+						$('#validationIcon').attr('src', '${request.getContextPath()}/images/public/amarok_validate_green.png');
+						$('#validationMessage').text('Validated!');
+						$('#validationBar').hide();
+						$('#validationBar').css("background-color","green")
+						$('#validationBar').fadeIn("slow");
+						//$('#persistIcon').attr('src', '${request.getContextPath()}/images/public/amarok_validate_red.png');
+						$('#persistBar').hide();
+						$('#persistBar').css("background-color","gray")
+						$('#persistBar').fadeIn("slow");
+						$('#persistMessage').text('Not implemented yet...');
+						$('#persistButtonPanel').fadeIn('slow');
+					}
 		        },
 		        add: function (e, data) {
+		        	data.context = '';
 		            data.context = $('<p/>').text('Uploading...').appendTo('#message');
 		            data.submit();
 		        },
@@ -99,11 +146,25 @@
 		        },
 		        error: function (e, data) {
 		        	$('#message').html('');
+		        	$('#uploadIcon').attr('src', '${request.getContextPath()}/images/public/amarok_share_red.png');
+		        	$('#uploadBar').css("background-color","red");
 		        	data.context = $('<p/>').text('Upload failed: '  + e.responseText).appendTo('#message');
+		        	
 		        	// $.each(data, function(key, element) {
 		        	// 	alert('key: ' + key + '\n' + 'value: ' + element);
 		        	 //});
 		        }
 		    })
+		     .on('fileuploadadd', function (e, data) {
+		    	 $('#message').text('');
+		     })
 		});
+
+		function persistAnnotation() {
+			alert(fileName);
+			$.post('${request.getContextPath()}/Upload/persistAnnotationFile?fileName='+fileName, function(data) {
+				alert(data);
+			});
+			
+		}
 	</script>
