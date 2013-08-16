@@ -52,4 +52,6 @@ interface ITripleStorePersistence {
 	 * @return The collection of annotation statements
 	 */
 	public List<Statement> retrieve(String URL);
+	
+	public List<Statement> retrieveGraph(String URL);
 }

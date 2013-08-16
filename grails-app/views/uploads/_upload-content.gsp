@@ -34,7 +34,8 @@
 						alert(data.length);
 		            }
 
-		            $('#uploadIcon').attr('src', '${request.getContextPath()}/images/public/amarok_share_green.png');
+		            //$('#uploadIcon').attr('src', '${request.getContextPath()}/images/public/amarok_share_green.png');
+		            $('#uploadIcon').attr('src', '${request.getContextPath()}/images/public/amarok_validate_green.png');
 
 		            $('#uploadBar').hide();
 					$('#uploadBar').css("background-color","green")
@@ -105,7 +106,8 @@
 						$('#persistBar').hide();
 						$('#persistBar').css("background-color","gray")
 						$('#persistBar').fadeIn("slow");
-						$('#persistMessage').text('Not implemented yet...');
+						$('#persistMessage').text('Invalid content cannot be stored');
+						$('#persistButtonPanel').hide();
 					} else if(data.result.summary.warn>0) {
 						$('#validationIcon').attr('src', '${request.getContextPath()}/images/public/amarok_validate_orange.png');
 						$('#validationMessage').text('Validated with warnings (see report below)');
@@ -113,10 +115,11 @@
 						$('#validationBar').css("background-color","orange")
 						$('#validationBar').fadeIn("slow");
 						//$('#persistIcon').attr('src', '${request.getContextPath()}/images/public/amarok_validate_red.png');
+						
 						$('#persistBar').hide();
 						$('#persistBar').css("background-color","gray")
 						$('#persistBar').fadeIn("slow");
-						$('#persistMessage').text('Not implemented yet...');
+						$('#persistMessage').text('Wanna store the data?');
 						$('#persistButtonPanel').fadeIn('slow');
 					} else {
 						$('#validationIcon').attr('src', '${request.getContextPath()}/images/public/amarok_validate_green.png');
@@ -125,6 +128,7 @@
 						$('#validationBar').css("background-color","green")
 						$('#validationBar').fadeIn("slow");
 						//$('#persistIcon').attr('src', '${request.getContextPath()}/images/public/amarok_validate_red.png');
+						
 						$('#persistBar').hide();
 						$('#persistBar').css("background-color","gray")
 						$('#persistBar').fadeIn("slow");
@@ -157,13 +161,24 @@
 		    })
 		     .on('fileuploadadd', function (e, data) {
 		    	 $('#message').text('');
+		    	 $('#uploadIcon').attr('src', '${request.getContextPath()}/images/public/amarok_share.png');
+		    	 $('#validateIcon').attr('src', '${request.getContextPath()}/images/public/amarok_validate.png');
+		    	 $('#persistIcon').attr('src', '${request.getContextPath()}/images/public/amarok_download.png');
 		     })
 		});
 
 		function persistAnnotation() {
-			alert(fileName);
+			//alert(fileName);
 			$.post('${request.getContextPath()}/Upload/persistAnnotationFile?fileName='+fileName, function(data) {
-				alert(data);
+				$.post('${request.getContextPath()}/TripleStore/retrieveGraph?uri='+encodeURIComponent(data), function(data) {
+					//alert(data);
+					$('#persistBar').hide();
+					$('#persistBar').css("background-color","gray")
+					$('#persistBar').fadeIn("slow");
+					$('#persistMessage').text('Annotation persisted!');
+					$('#persistButtonPanel').hide();
+					$('#persistIcon').attr('src', '${request.getContextPath()}/images/public/amarok_validate_green.png');
+				});
 			});
 			
 		}

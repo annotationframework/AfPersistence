@@ -1,3 +1,23 @@
+/*
+ * Copyright 2013 Massachusetts General Hospital
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.mindinformatics.ann.framework.modules.validation;
 
 import java.io.IOException;
@@ -7,11 +27,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.ontoware.rdf2go.Reasoning;
 import org.ontoware.rdf2go.model.Model;
 import org.ontoware.rdf2go.model.QueryResultTable;
 import org.ontoware.rdf2go.model.QueryRow;
-import org.openrdf.model.Value;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.QueryLanguage;
 import org.openrdf.query.TupleQuery;
@@ -22,148 +42,157 @@ import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.sail.memory.MemoryStore;
-import org.springframework.web.servlet.ModelAndView;
 
 import de.dfki.km.json.JSONUtils;
 
-
+/**
+ * @author Paolo Ciccarese <paolo.ciccarese@gmail.com>
+ */
 public class OAValidationHandler {
-
-	List<Map<String, Object>> validationRules;
+	
+	private final String VALIDATION_RULES_FILE = "OAConstraintsSPARQL.json";
+	private final String QUERY_ALL = "SELECT ?x ?p ?y WHERE { ?x ?p ?y } ";
+	private static Logger log = Logger.getLogger(OAValidationHandler.class);
 
 	@SuppressWarnings("unchecked")
-	public ModelAndView validate(InputStream inputRDF, String contentType) {
-		ModelAndView mav = new ModelAndView("validation");
+	public HashMap<String,Object> validate(InputStream inputRDF, String contentType) {
+
+		// Validation rules (later loaded from the external json file)
+		List<Map<String, Object>> validationRules = null;
+		
+		// Model factory
 		RepositoryModelFactory mf = new RepositoryModelFactory();
-		Model model = mf.createModel(Reasoning.owl);
-		Repository repository;
+		
+		// Results
+		HashMap<String,Object> finalResult = new HashMap<String, Object>();
+		
 		try {
 			if (contentType.contains("application/json")) {
 				try {
-					repository = new SailRepository(new MemoryStore());
+					// Repository initialization
+					Repository repository = new SailRepository(new MemoryStore());
 					repository.initialize();
 					
-					RepositoryConnection connection = repository.getConnection();
+					// Loading of the content to validate
+					log.info("Loading content...");
+					RepositoryConnection connection = null;
 					try {
+						connection = repository.getConnection();
 						connection.add(inputRDF, "http://localhost/jsonld/",RDFFormat.JSONLD);
 						connection.commit();
 					} catch (Exception ex) {
-						System.out.println("parsing  failed!");
+						log.error("{\"label\": \"Content parsing failed\", \"message\": " + ex.getMessage() + "\"}");
+						
+						Map<String, Object> exception = new HashMap<String, Object>();
+						exception.put("label", "Content parsing failed");
+						exception.put("message", ex.getMessage());
+						finalResult.put("exception", exception);
+						finalResult.put("code", "500");
+						return finalResult;
 					} finally {
-						connection.close();
+						if(connection!=null) connection.close();
 					}
 
-					// Load the model
+					// Model initialization
+					log.info("Loading model...");
+					Model model = mf.createModel(Reasoning.owl);
 					model.open();
-					RepositoryConnection con = repository.getConnection();
-
-					String query = "SELECT ?x ?p ?y WHERE { ?x ?p ?y } ";
-					TupleQuery tupleQuery = con.prepareTupleQuery(
-							QueryLanguage.SPARQL, query);
-					TupleQueryResult res = tupleQuery.evaluate();
+					
+					TupleQueryResult results  = null;
 					try {
-						while (res.hasNext()) {
-							BindingSet bindingSet = res.next();
-							
-							System.out.println(bindingSet.getValue("x").toString() + " - "
-									+ bindingSet.getValue("p").toString() + " - "
-									+ bindingSet.getValue("y").toString());
-							
-							Value valueOfX = bindingSet.getValue("x");
-							Value valueOfP = bindingSet.getValue("p");
-							Value valueOfY = bindingSet.getValue("y");
+						connection = repository.getConnection();
 
-							model.addStatement(model.createURI(valueOfX.toString()),
-									model.createURI(valueOfP.toString()),
-									model.createURI(valueOfY.stringValue().toString()));
+						TupleQuery tupleQuery = connection.prepareTupleQuery(QueryLanguage.SPARQL, QUERY_ALL);
+						results = tupleQuery.evaluate();						
+						
+						while (results.hasNext()) {
+							BindingSet bindingSet = results.next();
+							
+							log.debug(bindingSet.getValue("x").toString() + " - "
+								+ bindingSet.getValue("p").toString() + " - "
+								+ bindingSet.getValue("y").toString());
+
+							model.addStatement(
+								model.createURI(bindingSet.getValue("x").toString()),
+								model.createURI(bindingSet.getValue("p").toString()),
+								model.createURI(bindingSet.getValue("y").stringValue().toString()));
 						}
-					} catch (Exception e) {
-						System.out.println("A-----> " + e.getMessage());
+					} catch (Exception ex) {
+						log.error("{\"label\": \"Model cration failed\", \"message\": " + ex.getMessage() + "\"}");
+						
+						Map<String, Object> exception = new HashMap<String, Object>();
+						exception.put("label", "Model cration failed");
+						exception.put("message", ex.getMessage());
+						finalResult.put("exception", exception);
+						finalResult.put("code", "500");
+						return finalResult;
 					} finally {
-						res.close();
+						if(results!=null)  results.close();
 					}
 					
-					System.out.println("----0 " + model.size());
+					log.info("Number of imported triples " + model.size());
 					
 					// Load validation rules
-					if (validationRules == null) {
-						
-						InputStream in = this.getClass().getClassLoader()
-								.getResourceAsStream("OAConstraintsSPARQL.json");
-						try {
+					log.info("Loading validation rules...");
+					try {
+						if (validationRules == null) {
+							InputStream in = this.getClass().getClassLoader().getResourceAsStream(VALIDATION_RULES_FILE);
 							validationRules = (List<Map<String, Object>>) JSONUtils.fromInputStream(in, "UTF-8");
-						} catch (IOException e) {
-							System.out.println("Validation rules loading  failed!");
 						}
-					}
+					} catch (IOException ex) {
+						log.error("{\"label\": \"Validation rules loading failed\", \"message\": " + ex.getMessage() + "\"}");
+						
+						Map<String, Object> exception = new HashMap<String, Object>();
+						exception.put("label", "Validation rules loading failed");
+						exception.put("message", ex.getMessage());
+						finalResult.put("exception", exception);
+						finalResult.put("code", "500");
+						return finalResult;
+					}					
 					
-					
-					
+					log.info("Applying validation rules...");
 					int totalPass = 0, totalError = 0, totalWarn = 0, totalSkip = 0, totalTotal = 0;
-					// clone the validation rules into an object that we will pass to the
-					// ModelAndView
 					ArrayList<Map<String, Object>> result = new ArrayList<Map<String, Object>>(validationRules);
 					for (Map<String, Object> section : result) {
 						// for each section
 						int sectionPass = 0, sectionError = 0, sectionWarn = 0, sectionSkip = 0;
 						for (Map<String, Object> rule : ((List<Map<String, Object>>) section.get("constraints"))) {
-							System.out.println("----1  " + rule.size());
+							log.debug("Number of loaded constraints " + rule.size());
 							
 							totalTotal++;
 							// process each rule
 							String queryString = (String) rule.get("query");
 							String preconditionQueryString = (String) rule.get("precondition");
-							System.out.println("----Pre  " + preconditionQueryString);
+							log.debug("Preconditions:  " + preconditionQueryString);
 							if (queryString == null || "".equals(queryString)) {
 								totalSkip++;
 								sectionSkip++;
 								rule.put("status", "skip");
 								rule.put("result", "Validation rule not implemented");
-								System.out.println("----NO  " + queryString);
 							} else {
-								System.out.println("----YES  " + queryString);
-								//model.open();
-
-								/*
-								RepositoryConnection conn = null;
-								try {
-									conn = repository.getConnection();
-								} catch (RepositoryException e1) {
-									// TODO Auto-generated catch block
-									System.out.println("A-----> " + e1.getMessage());
-								}
-								*/
+								log.debug("Query: " + queryString);
 
 								int count = 0;
-								int precondcount = 0;
 								try {
 									boolean preconditionOK = true;
 									// TODO check if there is a precondition query and run
 									// that first to determine whether rule applies
-
 									if (preconditionQueryString != null && !"".equals(preconditionQueryString)) {
-										System.out.println("ASK-----> ");
 										boolean preconditionSatisfied = model.sparqlAsk(preconditionQueryString);
-										// TupleQuery tupleQuery =
-										// con.prepareTupleQuery(QueryLanguage.SPARQL,
-										// preconditionQueryString);
-										if(!preconditionSatisfied) System.out.println("NOOOOOOOOOOOOOO");
 										if (!preconditionSatisfied) {
+											log.debug("Precondition not satisfied");
 											// if precondition did not produce any matches,
 											// set status to skip
 											rule.put("status", "skip");
-											rule.put(
-													"result",
-													"Rule does not apply to supplied data: "
-															+ rule.get("preconditionMessage"));
-
+											rule.put("result", "Rule does not apply to supplied data: "
+												+ rule.get("preconditionMessage"));
 											totalSkip++;
 											sectionSkip++;
 											preconditionOK = false;
 										}
 									}
 									if (preconditionOK) {
-										System.out.println("QUERY-----> ");
+										log.info("Running query... " + queryString);
 										// run the query and store the result back into the
 										// constraint object
 										QueryResultTable resultTable = model.sparqlSelect(queryString);
@@ -174,9 +203,7 @@ public class OAValidationHandler {
 											for (String var : vars) {
 												org.ontoware.rdf2go.model.node.Node val = row
 														.getValue(var);
-												// LOG.info(var + " " + row.toString());
-												if (val != null
-														&& !val.toString().equals("0")) {
+												if (val != null && !val.toString().equals("0")) {
 													nullValues = false;
 													HashMap<String, String> r = new HashMap<String, String>();
 													r.put(var, row.getValue(var)
@@ -242,17 +269,17 @@ public class OAValidationHandler {
 					}
 					
 					// store results of validation in ModelAndView:
-			        HashMap<String,Object> finalResult = new HashMap<String, Object>();
+			       
 			        finalResult.put("result",result);
 			        finalResult.put("error",totalError);
 			        finalResult.put("warn", totalWarn);
 			        finalResult.put("pass",totalPass);
 			        finalResult.put("skip",totalSkip);
 			        finalResult.put("total", totalTotal);
-			        mav.addObject("result", finalResult);
+			        //mav.addObject("result", finalResult);
 			        // destroy temp rdf model
 			        model.close();
-			        return mav;
+			        return finalResult;
 
 
 				} catch (Exception e) {
@@ -263,7 +290,7 @@ public class OAValidationHandler {
 
 			} else {
 				System.out.println("What?");
-				return mav;
+				return finalResult;
 			}
 			
 			
@@ -273,8 +300,5 @@ public class OAValidationHandler {
 			System.out.println(e.getMessage());
 			return null;
 		}
-		
-		
-
 	}
 }

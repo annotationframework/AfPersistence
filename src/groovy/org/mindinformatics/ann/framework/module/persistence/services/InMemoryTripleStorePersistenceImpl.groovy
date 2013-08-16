@@ -5,12 +5,14 @@ import org.ontoware.rdf2go.model.Model
 import org.openrdf.model.Literal
 import org.openrdf.model.Statement
 import org.openrdf.model.ValueFactory
+import org.openrdf.query.BindingSet
 import org.openrdf.query.QueryLanguage
 import org.openrdf.query.TupleQuery
 import org.openrdf.query.TupleQueryResult
 import org.openrdf.rdf2go.RepositoryModelFactory
 import org.openrdf.repository.Repository
 import org.openrdf.repository.RepositoryConnection
+import org.openrdf.repository.RepositoryResult
 import org.openrdf.repository.sail.SailRepository
 import org.openrdf.rio.RDFFormat
 import org.openrdf.sail.memory.MemoryStore
@@ -36,7 +38,7 @@ class InMemoryTripleStorePersistenceImpl implements ITripleStorePersistence {
 	public String store(String username, String URL, File annotation) {
 		
 		ValueFactory f = repository.getValueFactory();
-		org.openrdf.model.URI context1 = f.createURI("http://example.org/" + annotation.name);
+		org.openrdf.model.URI context1 = f.createURI("http://example.org/" + annotation.name.replaceAll("-","_").replaceAll(".json", ""));
 		
 		RepositoryConnection connection = repository.getConnection();
 		InputStream inputRDF = new FileInputStream(annotation);
@@ -48,7 +50,7 @@ class InMemoryTripleStorePersistenceImpl implements ITripleStorePersistence {
 		} finally {
 			connection.close();
 		}
-		return null;
+		return context1;
 	}
 	
 	@Override
@@ -104,7 +106,8 @@ class InMemoryTripleStorePersistenceImpl implements ITripleStorePersistence {
 		RepositoryConnection con = repository.getConnection();
 		try {
 			//String queryString = "SELECT ?s ?p ?o WHERE { GRAPH <http://example.org/1376074729068> { ?s ?p ?o .}}";
-			String queryString = "SELECT ?s ?p ?o WHERE { ?s ?p ?o .}";
+			//String queryString = "SELECT ?s ?p ?o WHERE { ?s ?p ?o .}";
+			String queryString = "SELECT ?g ?s ?p ?o WHERE { GRAPH ?g { ?s ?p ?o .}}";
 			TupleQuery tupleQuery = con.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
 			TupleQueryResult result = tupleQuery.evaluate();
 			System.out.println('querying....');
@@ -117,6 +120,37 @@ class InMemoryTripleStorePersistenceImpl implements ITripleStorePersistence {
 		} finally {
 			con.close();
 		}
+	}
+	
+	@Override
+	public List<Statement> retrieveGraph(String URL) {
+		ValueFactory f = repository.getValueFactory();
+		List<Statement> stats = new  ArrayList<Statement>();
+		System.out.println('querying graph.... ' + URL);
+		RepositoryConnection con = repository.getConnection();
+		try {
+			//String queryString = "SELECT ?s ?p ?o WHERE { GRAPH <http://example.org/1376074729068> { ?s ?p ?o .}}";
+			//String queryString = "SELECT ?s ?p ?o WHERE { ?s ?p ?o .}";
+			String queryString = "SELECT ?g ?s ?p ?o WHERE { GRAPH <" + URL + "> { ?s ?p ?o .}}";
+			TupleQuery tupleQuery = con.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
+			TupleQueryResult result = tupleQuery.evaluate();
+			while(result.hasNext()) {
+				BindingSet bs = result.next();
+				System.out.println(bs.getBinding("s").getValue().stringValue() + " - " + bs.getBinding("p").getValue().stringValue()  + " - " + bs.getBinding("o").getValue().stringValue());
+			}
+			
+			RepositoryResult<Statement> res = con.getStatements(null, null, null, true, f.createURI(URL));
+			while(res.hasNext()) {
+				stats.add(res.next());
+			}
+			
+		} catch (Exception e) {
+			System.out.println('querying ex....' + e.getMessage());
+			e.printStackTrace();
+		} finally {
+			con.close();
+		}
+		return stats;
 	}
 
 

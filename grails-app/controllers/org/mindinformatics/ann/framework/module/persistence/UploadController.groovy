@@ -22,6 +22,8 @@
 package org.mindinformatics.ann.framework.module.persistence
 
 
+import java.util.HashMap;
+
 import org.apache.commons.fileupload.FileUploadException
 import org.apache.commons.fileupload.disk.DiskFileItemFactory
 import org.apache.commons.fileupload.servlet.ServletFileUpload
@@ -62,18 +64,18 @@ class UploadController {
 	
 	def persistAnnotationFile = {
 		println 'persisting... ' + params.fileName
+		String graph;
 		def loggedUser = injectUserProfile();
 		if(params.fileName!=null) {
-			println 'persisting...'
 			File directory = new File(request.getServletContext().getRealPath("/") +
 				"uploads/users/"+loggedUser.id + "/");
 			if(directory.exists()){
 				File file = new File(request.getServletContext().getRealPath("/") +
 					"uploads/users/"+loggedUser.id + "/", params.fileName);
-				iTripleStorePersistence.store("","",file);
+				graph = iTripleStorePersistence.store("","",file);
 			}
 		}
-		render'jo'
+		render graph;
 	}
 	
 	def annotationFile = {
@@ -127,13 +129,10 @@ class UploadController {
 				item.transferTo(file);
 				
 				OAValidationHandler validator = new OAValidationHandler();
-				ModelAndView mav = validator.validate(item.getInputStream(), "application/json")
-				println 'done';
+				HashMap<String,Object> resultExternal = validator.validate(item.getInputStream(), "application/json")
 				
 				
 				JSONObject jsonSummary = new JSONObject();
-				Object resultExternal = mav.getModel().get("result");
-				println resultExternal;
 				jsonSummary.put("file", file.getName());
 				jsonSummary.put("total", resultExternal.get("total"));
 				jsonSummary.put("warn", resultExternal.get("warn"));
