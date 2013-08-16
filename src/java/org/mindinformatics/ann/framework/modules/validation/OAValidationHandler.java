@@ -54,6 +54,14 @@ public class OAValidationHandler {
 	private final String QUERY_ALL = "SELECT ?x ?p ?y WHERE { ?x ?p ?y } ";
 	private static Logger log = Logger.getLogger(OAValidationHandler.class);
 
+	private Map<String, Object> createException(String label, String message) {
+		log.error("{\"label\": \"" + label + "\", \"message\": \"" + message + "\"}");
+		Map<String, Object> exception = new HashMap<String, Object>();
+		exception.put("label", label);
+		exception.put("message", message);
+		return exception;
+	}
+	
 	@SuppressWarnings("unchecked")
 	public HashMap<String,Object> validate(InputStream inputRDF, String contentType) {
 
@@ -81,13 +89,7 @@ public class OAValidationHandler {
 						connection.add(inputRDF, "http://localhost/jsonld/",RDFFormat.JSONLD);
 						connection.commit();
 					} catch (Exception ex) {
-						log.error("{\"label\": \"Content parsing failed\", \"message\": " + ex.getMessage() + "\"}");
-						
-						Map<String, Object> exception = new HashMap<String, Object>();
-						exception.put("label", "Content parsing failed");
-						exception.put("message", ex.getMessage());
-						finalResult.put("exception", exception);
-						finalResult.put("code", "500");
+						finalResult.put("exception", createException("Content parsing failed", ex.getMessage()));
 						return finalResult;
 					} finally {
 						if(connection!=null) connection.close();
@@ -117,14 +119,8 @@ public class OAValidationHandler {
 								model.createURI(bindingSet.getValue("p").toString()),
 								model.createURI(bindingSet.getValue("y").stringValue().toString()));
 						}
-					} catch (Exception ex) {
-						log.error("{\"label\": \"Model cration failed\", \"message\": " + ex.getMessage() + "\"}");
-						
-						Map<String, Object> exception = new HashMap<String, Object>();
-						exception.put("label", "Model cration failed");
-						exception.put("message", ex.getMessage());
-						finalResult.put("exception", exception);
-						finalResult.put("code", "500");
+					} catch (Exception ex) {						
+						finalResult.put("exception", createException("Model cration failed", ex.getMessage()));
 						return finalResult;
 					} finally {
 						if(results!=null)  results.close();
@@ -140,13 +136,7 @@ public class OAValidationHandler {
 							validationRules = (List<Map<String, Object>>) JSONUtils.fromInputStream(in, "UTF-8");
 						}
 					} catch (IOException ex) {
-						log.error("{\"label\": \"Validation rules loading failed\", \"message\": " + ex.getMessage() + "\"}");
-						
-						Map<String, Object> exception = new HashMap<String, Object>();
-						exception.put("label", "Validation rules loading failed");
-						exception.put("message", ex.getMessage());
-						finalResult.put("exception", exception);
-						finalResult.put("code", "500");
+						finalResult.put("exception", createException("Validation rules loading failed", ex.getMessage()));
 						return finalResult;
 					}					
 					
@@ -240,7 +230,7 @@ public class OAValidationHandler {
 								} catch (Exception e) {
 									// if there were any errors running queries, set status
 									// to skip
-									System.out.println("error validating: "
+									log.warn("error validating: "
 											+ rule.get("description") + " "
 											+ e.getMessage());
 									rule.put("status", "skip");
@@ -267,38 +257,27 @@ public class OAValidationHandler {
 							}
 						}
 					}
-					
-					// store results of validation in ModelAndView:
-			       
 			        finalResult.put("result",result);
 			        finalResult.put("error",totalError);
 			        finalResult.put("warn", totalWarn);
 			        finalResult.put("pass",totalPass);
 			        finalResult.put("skip",totalSkip);
 			        finalResult.put("total", totalTotal);
-			        //mav.addObject("result", finalResult);
+
 			        // destroy temp rdf model
 			        model.close();
 			        return finalResult;
-
-
-				} catch (Exception e) {
-					// throw new
-					// RequestFailureException(HttpServletResponse.SC_BAD_REQUEST,"Invalid JSON-LD");
-					System.out.println("D-----> " + e.getMessage());
+				} catch (Exception ex) {
+					finalResult.put("exception", createException("OA JSON validation failed", ex.getMessage()));
+					return finalResult;
 				}
-
 			} else {
-				System.out.println("What?");
+				finalResult.put("exception", createException("Format not supported", "Format not supported:" + contentType));
 				return finalResult;
 			}
-			
-			
-			return null;
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println(e.getMessage());
-			return null;
+		} catch (Exception ex) {
+			finalResult.put("exception", createException("OA validation failed", ex.getMessage()));
+			return finalResult;
 		}
 	}
 }
