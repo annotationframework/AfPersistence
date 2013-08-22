@@ -89,7 +89,7 @@ public class OAValidationHandler {
 						connection.add(inputRDF, "http://localhost/jsonld/",RDFFormat.JSONLD);
 						connection.commit();
 					} catch (Exception ex) {
-						finalResult.put("exception", createException("Content parsing failed", ex.getMessage()));
+						finalResult.put("exception", createException("Content parsing failed", "Failure while: loading of the content to validate " + ex.toString()));
 						return finalResult;
 					} finally {
 						if(connection!=null) connection.close();
@@ -120,7 +120,7 @@ public class OAValidationHandler {
 								model.createURI(bindingSet.getValue("y").stringValue().toString()));
 						}
 					} catch (Exception ex) {						
-						finalResult.put("exception", createException("Model cration failed", ex.getMessage()));
+						finalResult.put("exception", createException("Model cration failed", "Failure while: creating the model " + ex.toString()));
 						return finalResult;
 					} finally {
 						if(results!=null)  results.close();
@@ -136,7 +136,7 @@ public class OAValidationHandler {
 							validationRules = (List<Map<String, Object>>) JSONUtils.fromInputStream(in, "UTF-8");
 						}
 					} catch (IOException ex) {
-						finalResult.put("exception", createException("Validation rules loading failed", ex.getMessage()));
+						finalResult.put("exception", createException("Validation rules loading failed", "Failure while: loading the validation rules " + ex.toString()));
 						return finalResult;
 					}					
 					
@@ -268,7 +268,7 @@ public class OAValidationHandler {
 			        model.close();
 			        return finalResult;
 				} catch (Exception ex) {
-					finalResult.put("exception", createException("OA JSON validation failed", ex.getMessage()));
+					finalResult.put("exception", createException("OA JSON validation failed", "Failure while: validating the JSON " + ex.toString()));
 					return finalResult;
 				}
 			} else {
@@ -276,7 +276,7 @@ public class OAValidationHandler {
 				return finalResult;
 			}
 		} catch (Exception ex) {
-			finalResult.put("exception", createException("OA validation failed", ex.getMessage()));
+			finalResult.put("exception", createException("OA validation failed", "Failure while: validating the OA content " + ex.toString()));
 			return finalResult;
 		}
 	}

@@ -20,6 +20,7 @@
  */
 package org.mindinformatics.ann.framework.module.persistence.services
 
+import org.codehaus.groovy.grails.web.json.JSONObject
 import org.openrdf.model.Statement
 
 /**
@@ -54,4 +55,6 @@ interface ITripleStorePersistence {
 	public List<Statement> retrieve(String URL);
 	
 	public List<Statement> retrieveGraph(String URL);
+	
+	public JSONObject retrieveGraphAsJson(String URL);
 }

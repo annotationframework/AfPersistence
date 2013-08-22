@@ -1,5 +1,8 @@
 package org.mindinformatics.ann.framework.module.persistence.services
 
+import org.codehaus.groovy.grails.commons.ApplicationHolder
+import org.codehaus.groovy.grails.web.json.JSONArray
+import org.codehaus.groovy.grails.web.json.JSONObject
 import org.ontoware.rdf2go.Reasoning
 import org.ontoware.rdf2go.model.Model
 import org.openrdf.model.Literal
@@ -37,8 +40,9 @@ class InMemoryTripleStorePersistenceImpl implements ITripleStorePersistence {
 	@Override
 	public String store(String username, String URL, File annotation) {
 		
+		def grailsApplication = ApplicationHolder.application;
 		ValueFactory f = repository.getValueFactory();
-		org.openrdf.model.URI context1 = f.createURI("http://example.org/" + annotation.name.replaceAll("-","_").replaceAll(".json", ""));
+		org.openrdf.model.URI context1 = f.createURI(grailsApplication.config.af.node.base.url + 'blob/' + annotation.name.replaceAll("annotation-","").replaceAll(".json", ""));
 		
 		RepositoryConnection connection = repository.getConnection();
 		InputStream inputRDF = new FileInputStream(annotation);
@@ -153,6 +157,49 @@ class InMemoryTripleStorePersistenceImpl implements ITripleStorePersistence {
 		return stats;
 	}
 
+	@Override
+	public JSONObject retrieveGraphAsJson(String URL) {
+		ValueFactory f = repository.getValueFactory();
+		JSONObject res = new JSONObject();
+		System.out.println('querying graph.... ' + URL);
+		RepositoryConnection con = repository.getConnection();
+		try {
+			//String queryString = "SELECT ?s ?p ?o WHERE { GRAPH <http://example.org/1376074729068> { ?s ?p ?o .}}";
+			//String queryString = "SELECT ?s ?p ?o WHERE { ?s ?p ?o .}";
+			String queryString = "SELECT ?g ?s ?p ?o WHERE { GRAPH <" + URL + "> { ?s ?p ?o .}}";
+			TupleQuery tupleQuery = con.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
+			TupleQueryResult result = tupleQuery.evaluate();
+			
+			
+			
+			
+			
+			JSONArray stats = new  JSONArray();
+			
+			int counterLimit = 0
+			while(result.hasNext() && counterLimit<20) {
+				BindingSet bs = result.next();
+				JSONObject triple = new JSONObject();
+				triple.put("s", bs.getBinding("s").getValue().stringValue());
+				triple.put("p", bs.getBinding("p").getValue().stringValue());
+				triple.put("o", bs.getBinding("o").getValue().stringValue());
+				stats.add(triple);
+				counterLimit++;
+				//System.out.println(bs.getBinding("s").getValue().stringValue() + " - " + bs.getBinding("p").getValue().stringValue()  + " - " + bs.getBinding("o").getValue().stringValue());
+			}
+			
+			if(result.hasNext()) res.put("truncated", "yes");
+			else res.put("truncated", "no");
+			res.put("graph", URL);
+			res.put("triples", stats);
+		} catch (Exception e) {
+			System.out.println('querying ex....' + e.getMessage());
+			e.printStackTrace();
+		} finally {
+			con.close();
+		}
+		return res;
+	}
 
 
 }

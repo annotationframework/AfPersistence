@@ -22,18 +22,14 @@
 package org.mindinformatics.ann.framework.module.persistence
 
 
-import java.util.HashMap;
-
-import org.apache.commons.fileupload.FileUploadException
 import org.apache.commons.fileupload.disk.DiskFileItemFactory
 import org.apache.commons.fileupload.servlet.ServletFileUpload
 import org.apache.commons.io.FilenameUtils
 import org.codehaus.groovy.grails.web.json.JSONArray
 import org.codehaus.groovy.grails.web.json.JSONObject
 import org.mindinformatics.ann.framework.module.security.users.User
-import org.mindinformatics.ann.framework.modules.validation.OAValidationHandler;
+import org.mindinformatics.ann.framework.modules.validation.OAValidationHandler
 import org.springframework.web.multipart.MultipartFile
-import org.springframework.web.servlet.ModelAndView
 
 /**
  * @author Paolo Ciccarese <paolo.ciccarese@gmail.com>
@@ -95,6 +91,7 @@ class UploadController {
 			try {
 				long start = System.currentTimeMillis();
 				MultipartFile item = request.getFile('annotation');
+				// item = null;
 				println item.getContentType();
 				println item.size;
 				def okcontents = ['application/json']
@@ -108,10 +105,11 @@ class UploadController {
 				jsonResponse.put("name", item.getName());
 				jsonResponse.put("size", item.getSize());
 				
+				def filename = UUID.randomUUID();
 				String extension = FilenameUtils.getExtension(item.getOriginalFilename());
 				log.info("Creating file " + request.getServletContext().getRealPath("/") +
 					"uploads/users/"+loggedUser.id + "/" +
-					"annotation-" +  start + "." + extension);
+					"annotation-" +  filename + "." + extension);
 				
 				File directory = new File(request.getServletContext().getRealPath("/") +
 					"uploads/users/"+loggedUser.id + "/");
@@ -124,60 +122,73 @@ class UploadController {
 				}
 				
 				File file = new File(request.getServletContext().getRealPath("/") +
-					"uploads/users/"+loggedUser.id + "/", "annotation-" +  start + "." + extension);
+					"uploads/users/"+loggedUser.id + "/", "annotation-" +  filename + "." + extension);
 				log.info("Creating file " + file.getName());		
 				item.transferTo(file);
 				
 				OAValidationHandler validator = new OAValidationHandler();
 				HashMap<String,Object> resultExternal = validator.validate(item.getInputStream(), "application/json")
 				
-				
-				JSONObject jsonSummary = new JSONObject();
-				jsonSummary.put("file", file.getName());
-				jsonSummary.put("total", resultExternal.get("total"));
-				jsonSummary.put("warn", resultExternal.get("warn"));
-				jsonSummary.put("error", resultExternal.get("error"));
-				jsonSummary.put("skip", resultExternal.get("skip"));
-				jsonSummary.put("pass", resultExternal.get("pass"));
-				jsonResponse.put("summary", jsonSummary);
-				
-				JSONArray jsonResults = new JSONArray();
-				Object resultInternal = resultExternal.get("result");
-				for(Object result: resultInternal) {
-					JSONObject jsonResult = new JSONObject();
-
-					jsonResult.put("section", result.getAt("section"));
-					jsonResult.put("warn", result.getAt("warn"));
-					jsonResult.put("error", result.getAt("error"));
-					jsonResult.put("skip", result.getAt("skip"));
-					jsonResult.put("pass", result.getAt("pass"));
-					jsonResult.put("total", result.getAt("total"));
+				if(resultExternal.get("result")!=null) {
+					JSONObject jsonSummary = new JSONObject();
+					jsonSummary.put("file", file.getName());
+					jsonSummary.put("total", resultExternal.get("total"));
+					jsonSummary.put("warn", resultExternal.get("warn"));
+					jsonSummary.put("error", resultExternal.get("error"));
+					jsonSummary.put("skip", resultExternal.get("skip"));
+					jsonSummary.put("pass", resultExternal.get("pass"));
+					jsonResponse.put("summary", jsonSummary);
 					
-					JSONArray jsonConstraints = new JSONArray();
-					ArrayList constraints = result.getAt("constraints");
-					for(Object constraint: constraints) {
-						JSONObject jsonConstraint = new JSONObject();
-						jsonConstraint.put("ref", constraint.getAt("ref"));
-						jsonConstraint.put("url", constraint.getAt("url"));
-						jsonConstraint.put("severity", constraint.getAt("severity"));
-						jsonConstraint.put("status", constraint.getAt("status"));
-						jsonConstraint.put("result", constraint.getAt("result"));
-						jsonConstraint.put("description", constraint.get("description"));
-						jsonConstraints.add(jsonConstraint);
-						jsonResult.put("constraints", jsonConstraints);
+					JSONArray jsonResults = new JSONArray();
+					Object resultInternal = resultExternal.get("result");
+					for(Object result: resultInternal) {
+						JSONObject jsonResult = new JSONObject();
+	
+						jsonResult.put("section", result.getAt("section"));
+						jsonResult.put("warn", result.getAt("warn"));
+						jsonResult.put("error", result.getAt("error"));
+						jsonResult.put("skip", result.getAt("skip"));
+						jsonResult.put("pass", result.getAt("pass"));
+						jsonResult.put("total", result.getAt("total"));
+						
+						JSONArray jsonConstraints = new JSONArray();
+						ArrayList constraints = result.getAt("constraints");
+						for(Object constraint: constraints) {
+							JSONObject jsonConstraint = new JSONObject();
+							jsonConstraint.put("ref", constraint.getAt("ref"));
+							jsonConstraint.put("url", constraint.getAt("url"));
+							jsonConstraint.put("severity", constraint.getAt("severity"));
+							jsonConstraint.put("status", constraint.getAt("status"));
+							jsonConstraint.put("result", constraint.getAt("result"));
+							jsonConstraint.put("description", constraint.get("description"));
+							jsonConstraints.add(jsonConstraint);
+							jsonResult.put("constraints", jsonConstraints);
+						}
+						jsonResults.add(jsonResult);
 					}
-					jsonResults.add(jsonResult);
+	
+			
+					jsonResponse.put("results", jsonResults);
+				} else if(resultExternal.get("exception")!=null) {
+					Object exc =  resultExternal.get("exception");
+					
+					JSONObject jsonException = new JSONObject();
+					jsonException.put("step", "validation");
+					jsonException.put("label", exc.get("label"));
+					jsonException.put("description", exc.get("message"));
+					
+					jsonResponse.put("exception", jsonException);
 				}
-
-		
-				jsonResponse.put("results", jsonResults);
 				
 				
-			} catch (FileUploadException e) {
-				e.printStackTrace();
-				throw new RuntimeException(e);
 			} catch (Exception e) {
-				throw new RuntimeException(e);
+				JSONObject jsonException = new JSONObject();
+				jsonException.put("step", "upload");
+				jsonException.put("label", "Exception while uploading the file");
+				jsonException.put("description", "Failure while: Uploading the file " + e.toString());
+				
+				jsonResponse.put("exception", jsonException);
+				response.setStatus(500);
 			} finally {
 				writer.write(jsonResponse.toString());
 				writer.close();
