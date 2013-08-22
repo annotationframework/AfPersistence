@@ -166,20 +166,17 @@ class InMemoryTripleStorePersistenceImpl implements ITripleStorePersistence {
 		try {
 			//String queryString = "SELECT ?s ?p ?o WHERE { GRAPH <http://example.org/1376074729068> { ?s ?p ?o .}}";
 			//String queryString = "SELECT ?s ?p ?o WHERE { ?s ?p ?o .}";
-			String queryString = "SELECT ?g ?s ?p ?o WHERE { GRAPH <" + URL + "> { ?s ?p ?o .}}";
+			String queryString = "SELECT ?s ?p ?o WHERE { GRAPH <" + URL + "> { ?s ?p ?o .}}";
 			TupleQuery tupleQuery = con.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
 			TupleQueryResult result = tupleQuery.evaluate();
-			
-			
-			
-			
-			
+
 			JSONArray stats = new  JSONArray();
 			
 			int counterLimit = 0
 			while(result.hasNext() && counterLimit<20) {
 				BindingSet bs = result.next();
 				JSONObject triple = new JSONObject();
+				triple.put("g", URL);
 				triple.put("s", bs.getBinding("s").getValue().stringValue());
 				triple.put("p", bs.getBinding("p").getValue().stringValue());
 				triple.put("o", bs.getBinding("o").getValue().stringValue());
