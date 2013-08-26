@@ -7,6 +7,9 @@ class AnnotationRange {
     Integer endOffset
     Integer startOffset
 
+    Date dateCreated
+    Date lastUpdated
+
     static belongsTo = [annotation:Annotation]
 
     static constraints = {

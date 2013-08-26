@@ -22,3 +22,14 @@ log4j = {
 
     warn   'org.mortbay.log'
 }
+
+// FIXME I do not think this needs to be added to each plugin Config.groovy, but I had to add it in order to keep from
+// getting the following error when running tests
+//  Error Error executing script TestApp: java.lang.NullPointerException: Cannot invoke method newInstance() on null object (NOTE: Stack trace has been filtered. Use --verbose to see entire trace.)
+// java.lang.NullPointerException: Cannot invoke method newInstance() on null object
+grails.plugins.springsecurity.userLookup.userDomainClassName = 'org.mindinformatics.ann.framework.module.security.users.User'
+grails.plugins.springsecurity.userLookup.authorityJoinClassName = 'org.mindinformatics.ann.framework.module.security.users.UserRole'
+grails.plugins.springsecurity.authority.className = 'org.mindinformatics.ann.framework.module.security.users.Role'
+grails.plugins.springsecurity.rememberMe.persistent = true
+grails.plugins.springsecurity.rememberMe.persistentToken.domainClassName = 'org.mindinformatics.ann.framework.module.security.PersistentLogin'
+grails.plugins.springsecurity.openid.domainClass = 'org.mindinformatics.ann.framework.module.security.OpenID'
