@@ -1,4 +1,4 @@
-package org.mindinformatics.ann.framework.module.converter
+package org.mindinformatics.ann.framework.module.converters
 
 import org.codehaus.groovy.grails.web.json.JSONObject
 import org.openrdf.model.ValueFactory
@@ -8,7 +8,7 @@ import org.openrdf.query.TupleQueryResult
 import org.openrdf.repository.RepositoryConnection
 
 
-class AnnotatorToOpenAnnotationConverterService {
+class AnnotatorToOpenAnnotationConverter {
 
 	def iTripleStorePersistence;
 	

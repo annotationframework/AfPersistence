@@ -1,10 +1,11 @@
-package org.mindinformatics.ann.framework.module.converter;
+package org.mindinformatics.ann.framework.module.converters;
 
 import grails.converters.JSON
 
 import org.junit.*
+import org.mindinformatics.ann.framework.module.converters.AnnotatorToOpenAnnotationConverter;
 
-class AnnotatorToOpenAnnotationConverterServiceTest {
+class AnnotatorToOpenAnnotationConverterTest {
 
 	@Test
 	void normalizeTest() {
@@ -12,7 +13,7 @@ class AnnotatorToOpenAnnotationConverterServiceTest {
 		
 		def jsonObject = JSON.parse(json);
 		
-		AnnotatorToOpenAnnotationConverterService a = new AnnotatorToOpenAnnotationConverterService();
+		AnnotatorToOpenAnnotationConverter a = new AnnotatorToOpenAnnotationConverter();
 		a.normalize(jsonObject);
 	}
 }

@@ -42,7 +42,7 @@ class AnnotatorService {
 
         // Keep this until we know we're moving away from a relational database table
         //def annotation = new Annotation(text: jsonObject.text, uri: jsonObject.uri, quote:  jsonObject.quote, json: jsonObject.toString())
-        //request.JSON.ranges.each {
+        //request.JSON.ranges.each { 
         //    def range = new AnnotationRange(start: it.start, end: it.end, startOffset: it.startOffset, endOffset:  it.endOffset)
         //    annotation.addToRanges(range)
         //}
