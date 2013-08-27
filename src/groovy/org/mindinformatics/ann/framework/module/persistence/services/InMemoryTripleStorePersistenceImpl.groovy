@@ -161,6 +161,36 @@ class InMemoryTripleStorePersistenceImpl implements ITripleStorePersistence {
 		}
 		return stats;
 	}
+	
+	@Override
+	public List<Statement> retrieveAnnotation(String URL) {
+		ValueFactory f = repository.getValueFactory();
+		List<Statement> stats = new  ArrayList<Statement>();
+		System.out.println('querying annotation.... ' + URL);
+		RepositoryConnection con = repository.getConnection();
+		try {
+			//String queryString = "SELECT ?s ?p ?o WHERE { GRAPH <http://example.org/1376074729068> { ?s ?p ?o .}}";
+			//String queryString = "SELECT ?s ?p ?o WHERE { ?s ?p ?o .}";
+			String queryString = "SELECT ?g WHERE { GRAPH ?g { <" + URL + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <>http://www.w3.org/ns/oa#Annotation .}}";
+			TupleQuery tupleQuery = con.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
+			TupleQueryResult result = tupleQuery.evaluate();
+			def graphURI;
+			while(result.hasNext()) {
+				BindingSet bs = result.next();
+				System.out.println(bs.getBinding("g").getValue().stringValue());
+				graphURI = bs.getBinding("g").getValue().stringValue();
+			}
+			
+			return retrieveGraph(graphURI);
+			
+		} catch (Exception e) {
+			System.out.println('querying ex....' + e.getMessage());
+			e.printStackTrace();
+		} finally {
+			con.close();
+		}
+		return stats;
+	}
 
 	@Override
 	public JSONObject retrieveGraphAsJson(String URL) {

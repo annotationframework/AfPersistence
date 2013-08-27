@@ -57,7 +57,10 @@ interface ITripleStorePersistence {
 	
 	public List<Statement> retrieveGraph(String URL);
 	
+	public List<Statement> retrieveAnnotation(String URL);
+	
 	public JSONObject retrieveGraphAsJson(String URL);
+	
 	
 	public Repository getRepository();
 }
