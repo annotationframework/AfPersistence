@@ -22,6 +22,7 @@ package org.mindinformatics.ann.framework.module.persistence.services
 
 import org.codehaus.groovy.grails.web.json.JSONObject
 import org.openrdf.model.Statement
+import org.openrdf.repository.Repository
 
 /**
  * @author Paolo Ciccarese <paolo.ciccarese@gmail.com>
@@ -57,4 +58,6 @@ interface ITripleStorePersistence {
 	public List<Statement> retrieveGraph(String URL);
 	
 	public JSONObject retrieveGraphAsJson(String URL);
+	
+	public Repository getRepository();
 }

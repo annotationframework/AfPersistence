@@ -38,6 +38,11 @@ class InMemoryTripleStorePersistenceImpl implements ITripleStorePersistence {
 	}
 	
 	@Override
+	public Repository getConnection() {
+		return repository;
+	}
+	
+	@Override
 	public String store(String username, String URL, File annotation) {
 		
 		def grailsApplication = ApplicationHolder.application;
