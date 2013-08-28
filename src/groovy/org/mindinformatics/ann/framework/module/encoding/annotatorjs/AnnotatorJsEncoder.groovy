@@ -21,6 +21,7 @@
 package org.mindinformatics.ann.framework.module.encoding.annotatorjs
 
 import org.codehaus.groovy.grails.web.json.JSONObject
+import org.mindinformatics.ann.framework.module.encoding.IContentAsRdfVocabulary
 import org.mindinformatics.ann.framework.module.encoding.IOpenAnnotation
 import org.mindinformatics.ann.framework.module.encoding.IOpenAnnotationJsonEncoder
 import org.mindinformatics.ann.framework.module.encoding.IRdfVocabulary
@@ -63,13 +64,13 @@ class AnnotatorJsEncoder implements IOpenAnnotationJsonEncoder {
 					f.createURI("http://purl.org/dc/dcmitype/Text"), context1);
 				con.add(bodyUri,
 					f.createURI(IRdfVocabulary.PROPERTY_TYPE_URI),
-					f.createURI("http://www.w3.org/2011/content#ContentAsText"), context1);
+					f.createURI(IContentAsRdfVocabulary.CLASS_CONTENTASTEXT_URI), context1);
 				con.add(bodyUri,
 					f.createURI("http://purl.org/dc/elements/1.1/format"),
 					f.createLiteral("text/plain"), context1);
 				// Annotation body chars
 				con.add(bodyUri,
-					f.createURI("http://www.w3.org/2011/content#chars"),
+					f.createURI(IContentAsRdfVocabulary.PROPERTY_CHARS_URI),
 					f.createLiteral(json.text), context1);
 				
 				// Annotation target

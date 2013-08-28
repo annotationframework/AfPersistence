@@ -21,6 +21,8 @@
 package org.mindinformatics.ann.framework.module.encoding;
 
 /**
+ * List of classes and properties of the RDF Vocabulary.
+ * 
  * @author Paolo Ciccarese <paolo.ciccarese@gmail.com>
  */
 public interface IRdfVocabulary {

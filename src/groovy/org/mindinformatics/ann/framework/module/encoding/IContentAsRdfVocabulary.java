@@ -21,22 +21,15 @@
 package org.mindinformatics.ann.framework.module.encoding;
 
 /**
- * List of classes and properties of the Open Annotation Model.
- * Website: http://www.openannotation.org/spec/core/
+ * List of classes and properties of the Content As RFD vocabulary.
+ * Website: http://www.w3.org/TR/Content-in-RDF10/
  * 
  * @author Paolo Ciccarese <paolo.ciccarese@gmail.com>
  */
-public interface IOpenAnnotation {
+public interface IContentAsRdfVocabulary {
 
-	public static final String NAMESPACE = "http://www.w3.org/ns/oa#";
+	public static final String NAMESPACE = "http://www.w3.org/2011/content#";
 	
-	public static final String CLASS_ANNOTATION = "oa:Annotation";
-	public static final String CLASS_ANNOTATION_NAME = "Annotation";
-	public static final String CLASS_ANNOTATION_URI = NAMESPACE + "Annotation";
-	public static final String CLASS_SPECIFICRESOURCE_URI = NAMESPACE + "SpecificResource";
-	
-	public static final String PROPERTY_HASBODY_URI = NAMESPACE + "hasBody";
-	public static final String PROPERTY_HASTARGET_URI = NAMESPACE + "hasTarget";
-	public static final String PROPERTY_HASSOURCE_URI = NAMESPACE + "hasSource";
-	public static final String PROPERTY_HASSELECTOR_URI = NAMESPACE + "hasSelector";
+	public static final String CLASS_CONTENTASTEXT_URI = NAMESPACE + "ContentAsText";
+	public static final String PROPERTY_CHARS_URI = NAMESPACE + "chars";
 }
