@@ -18,26 +18,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.mindinformatics.ann.framework.module.encoding.annotatorjs
-
-import org.codehaus.groovy.grails.web.json.JSONObject
-import org.mindinformatics.ann.framework.module.encoding.IOpenAnnotationJsonEncoderService
-import org.openrdf.repository.Repository
+package org.mindinformatics.ann.framework.module.encoding;
 
 /**
- * Service that converts a JSON object into Open Annotatin triples in the current
- * repository. 
- *
  * @author Paolo Ciccarese <paolo.ciccarese@gmail.com>
  */
-class AnnotatorJsEncoderService implements IOpenAnnotationJsonEncoderService {
+public interface IRdfVocabulary {
 
-	def iTripleStorePersistence;
+	public static final String NAMESPACE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 	
-	@Override
-	public org.openrdf.model.URI encode(JSONObject json) {
-		Repository repository = iTripleStorePersistence.getRepository();
-		AnnotatorJsEncoder converter = new AnnotatorJsEncoder();
-		return converter.encode(repository, json);
-	}
+	public static final String PROPERTY_TYPE_URI = NAMESPACE + "type";
 }
