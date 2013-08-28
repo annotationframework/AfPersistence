@@ -21,14 +21,14 @@
 package org.mindinformatics.ann.framework.module.encoding;
 
 /**
- * List of classes and properties of the RDF Vocabulary.
- * Website: http://www.w3.org/TR/rdf-schema/
+ * List of classes and properties of the Dublin Core Elements vocabulary.
+ * Website: http://dublincore.org/documents/dces/
  * 
  * @author Paolo Ciccarese <paolo.ciccarese@gmail.com>
  */
-public interface IRdfVocabulary {
+public interface IDublinCoreElementsVocabulary {
 
-	public static final String NAMESPACE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+	public static final String NAMESPACE = "http://purl.org/dc/elements/1.1/";
 	
-	public static final String PROPERTY_TYPE_URI = NAMESPACE + "type";
+	public static final String PROPERTY_FORMAT_URI = NAMESPACE + "format";
 }

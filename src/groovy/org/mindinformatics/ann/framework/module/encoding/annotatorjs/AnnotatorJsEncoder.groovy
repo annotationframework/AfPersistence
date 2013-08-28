@@ -22,9 +22,13 @@ package org.mindinformatics.ann.framework.module.encoding.annotatorjs
 
 import org.codehaus.groovy.grails.web.json.JSONObject
 import org.mindinformatics.ann.framework.module.encoding.IContentAsRdfVocabulary
+import org.mindinformatics.ann.framework.module.encoding.IDublinCoreElementsVocabulary
+import org.mindinformatics.ann.framework.module.encoding.IDublinCoreTypesVocabulary
+import org.mindinformatics.ann.framework.module.encoding.IMimeTypesVocabulary
 import org.mindinformatics.ann.framework.module.encoding.IOpenAnnotation
 import org.mindinformatics.ann.framework.module.encoding.IOpenAnnotationJsonEncoder
 import org.mindinformatics.ann.framework.module.encoding.IRdfVocabulary
+import org.openrdf.model.Literal
 import org.openrdf.model.URI
 import org.openrdf.model.ValueFactory
 import org.openrdf.repository.Repository
@@ -36,6 +40,19 @@ import org.openrdf.repository.RepositoryConnection
  */
 class AnnotatorJsEncoder implements IOpenAnnotationJsonEncoder {
 
+	
+	private void addStatement(RepositoryConnection con, ValueFactory f, org.openrdf.model.URI subject, String predicate, String object, org.openrdf.model.URI context) {
+		con.add(subject, f.createURI(predicate), f.createURI(object), context);
+	}
+	
+	private void addStatement(RepositoryConnection con, ValueFactory f, org.openrdf.model.URI subject, String predicate,  org.openrdf.model.URI object, org.openrdf.model.URI context) {
+		con.add(subject, f.createURI(predicate), object, context);
+	}
+	
+	private void addStatement(RepositoryConnection con, ValueFactory f, org.openrdf.model.URI subject, String predicate,  Literal object, org.openrdf.model.URI context) {
+		con.add(subject, f.createURI(predicate), object, context);
+	}
+	
 	@Override
 	public org.openrdf.model.URI encode(Repository repository, JSONObject json) {
 		ValueFactory f = repository.getValueFactory();
@@ -49,62 +66,32 @@ class AnnotatorJsEncoder implements IOpenAnnotationJsonEncoder {
 			RepositoryConnection con = repository.getConnection();
 			try {
 				// Annotation type
-				con.add(annotationUri,
-					f.createURI(IRdfVocabulary.PROPERTY_TYPE_URI),
-					f.createURI(IOpenAnnotation.CLASS_ANNOTATION_URI), context1);
+				addStatement(con, f, annotationUri, IRdfVocabulary.PROPERTY_TYPE_URI, IOpenAnnotation.CLASS_ANNOTATION_URI, context1);
 				
 				// Annotation body
 				org.openrdf.model.URI bodyUri = f.createURI("http://example.org/body/" + json.id);
-				con.add(annotationUri,
-					f.createURI(IOpenAnnotation.PROPERTY_HASBODY_URI),
-					bodyUri, 
-					context1);
-				con.add(bodyUri,
-					f.createURI(IRdfVocabulary.PROPERTY_TYPE_URI),
-					f.createURI("http://purl.org/dc/dcmitype/Text"), context1);
-				con.add(bodyUri,
-					f.createURI(IRdfVocabulary.PROPERTY_TYPE_URI),
-					f.createURI(IContentAsRdfVocabulary.CLASS_CONTENTASTEXT_URI), context1);
-				con.add(bodyUri,
-					f.createURI("http://purl.org/dc/elements/1.1/format"),
-					f.createLiteral("text/plain"), context1);
-				// Annotation body chars
-				con.add(bodyUri,
-					f.createURI(IContentAsRdfVocabulary.PROPERTY_CHARS_URI),
-					f.createLiteral(json.text), context1);
+				addStatement(con, f, annotationUri, IOpenAnnotation.PROPERTY_HASBODY_URI, bodyUri, context1);
+				addStatement(con, f, bodyUri, IRdfVocabulary.PROPERTY_TYPE_URI, IDublinCoreTypesVocabulary.CLASS_TEXT_URI, context1);
+				addStatement(con, f, bodyUri, IRdfVocabulary.PROPERTY_TYPE_URI, IContentAsRdfVocabulary.CLASS_CONTENTASTEXT_URI, context1);
+				addStatement(con, f, bodyUri, (IDublinCoreElementsVocabulary.PROPERTY_FORMAT_URI), f.createLiteral(IMimeTypesVocabulary.VALUE_TEXT_JSON), context1);
+				addStatement(con, f, bodyUri, IContentAsRdfVocabulary.PROPERTY_CHARS_URI, f.createLiteral(json.text), context1);
 				
 				// Annotation target
 				org.openrdf.model.URI targetUri = f.createURI("http://example.org/target/" + json.id);
-				con.add(annotationUri,
-					f.createURI(IOpenAnnotation.PROPERTY_HASTARGET_URI),
-					targetUri, context1);
-				con.add(targetUri,
-					f.createURI(IRdfVocabulary.PROPERTY_TYPE_URI),
-					f.createURI(IOpenAnnotation.CLASS_SPECIFICRESOURCE_URI), context1);
-				con.add(targetUri,
-					f.createURI(IOpenAnnotation.PROPERTY_HASSOURCE_URI),
-					f.createURI(json.uri), context1);
-				// Annotation target selector
-				org.openrdf.model.URI selectorUri = f.createURI("http://example.org/selector/" + json.id);
-				con.add(targetUri,
-					f.createURI(IOpenAnnotation.PROPERTY_HASSELECTOR_URI),
-					selectorUri, context1);
-				con.add(selectorUri,
-					f.createURI(IRdfVocabulary.PROPERTY_TYPE_URI),
-					f.createURI("http://www.annotationframework.org/ns/af#AnnotatorPositionSelector"), context1);
-				con.add(selectorUri,
-					f.createURI("http://www.annotationframework.org/ns/af#start"),
-					f.createLiteral(json.ranges[0].start), context1);
-				con.add(selectorUri,
-					f.createURI("http://www.annotationframework.org/ns/af#startOffset"),
-					f.createLiteral(json.ranges[0].startOffset), context1);
-				con.add(selectorUri,
-					f.createURI("http://www.annotationframework.org/ns/af#end"),
-					f.createLiteral(json.ranges[0].end), context1);
-				con.add(selectorUri,
-					f.createURI("http://www.annotationframework.org/ns/af#endOffset"),
-					f.createLiteral(json.ranges[0].endOffset), context1);		
+				addStatement(con, f, annotationUri, IOpenAnnotation.PROPERTY_HASTARGET_URI, targetUri, context1);
+				addStatement(con, f, targetUri, IRdfVocabulary.PROPERTY_TYPE_URI, IOpenAnnotation.CLASS_SPECIFICRESOURCE_URI, context1);
+				addStatement(con, f, targetUri, IOpenAnnotation.PROPERTY_HASSOURCE_URI, json.uri, context1);
 				
+				// Annotation target selector
+				for(int i=0; i<json.ranges.size(); i++) {
+					org.openrdf.model.URI selectorUri = f.createURI("http://example.org/selector/" + json.id + "_" + i);
+					addStatement(con, f, targetUri, IOpenAnnotation.PROPERTY_HASSELECTOR_URI, selectorUri, context1);
+					addStatement(con, f, selectorUri, IRdfVocabulary.PROPERTY_TYPE_URI, "http://www.annotationframework.org/ns/af#AnnotatorPositionSelector", context1);
+					addStatement(con, f, selectorUri, "http://www.annotationframework.org/ns/af#start", f.createLiteral(json.ranges[i].start), context1);
+					addStatement(con, f, selectorUri, "http://www.annotationframework.org/ns/af#startOffset", f.createLiteral(json.ranges[i].startOffset), context1);
+					addStatement(con, f, selectorUri, "http://www.annotationframework.org/ns/af#end", f.createLiteral(json.ranges[i].end), context1);
+					addStatement(con, f, selectorUri, "http://www.annotationframework.org/ns/af#endOffset", f.createLiteral(json.ranges[i].endOffset), context1);
+				}						
 				return context1;
 				
 			} finally {
