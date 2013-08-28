@@ -21,7 +21,6 @@
 package org.mindinformatics.ann.framework.module.encoding.annotatorjs
 
 import org.codehaus.groovy.grails.web.json.JSONObject
-import org.mindinformatics.ann.framework.converters.AnnotatorToOpenAnnotationConverter
 import org.mindinformatics.ann.framework.module.encoding.IOpenAnnotationJsonEncoderService
 import org.openrdf.repository.Repository
 
@@ -37,7 +36,7 @@ class AnnotatorJsEncoderService implements IOpenAnnotationJsonEncoderService {
 	
 	public org.openrdf.model.URI encode(JSONObject json) {
 		Repository repository = iTripleStorePersistence.getRepository();
-		AnnotatorToOpenAnnotationConverter converter = new AnnotatorToOpenAnnotationConverter();
-		return converter.normalize(repository, json);
+		AnnotatorJsEncoder converter = new AnnotatorJsEncoder();
+		return converter.encode(repository, json);
 	}
 }
