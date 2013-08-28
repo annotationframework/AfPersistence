@@ -53,6 +53,14 @@ class AnnotatorJsEncoder implements IOpenAnnotationJsonEncoder {
 		con.add(subject, f.createURI(predicate), object, context);
 	}
 	
+	private void createTextualBody(RepositoryConnection con, ValueFactory f,  org.openrdf.model.URI annotationUri,  org.openrdf.model.URI bodyUri, String text, org.openrdf.model.URI context) {
+		addStatement(con, f, bodyUri, IRdfVocabulary.PROPERTY_TYPE_URI, IDublinCoreTypesVocabulary.CLASS_TEXT_URI, context);
+		addStatement(con, f, bodyUri, IRdfVocabulary.PROPERTY_TYPE_URI, IContentAsRdfVocabulary.CLASS_CONTENTASTEXT_URI, context);
+		addStatement(con, f, bodyUri, (IDublinCoreElementsVocabulary.PROPERTY_FORMAT_URI), f.createLiteral(IMimeTypesVocabulary.VALUE_TEXT_JSON), context);
+		addStatement(con, f, bodyUri, IContentAsRdfVocabulary.PROPERTY_CHARS_URI, f.createLiteral(text), context);
+		addStatement(con, f, annotationUri, IOpenAnnotation.PROPERTY_HASBODY_URI, bodyUri, context);
+	}
+	
 	@Override
 	public org.openrdf.model.URI encode(Repository repository, JSONObject json) {
 		ValueFactory f = repository.getValueFactory();
@@ -70,11 +78,7 @@ class AnnotatorJsEncoder implements IOpenAnnotationJsonEncoder {
 				
 				// Annotation body
 				org.openrdf.model.URI bodyUri = f.createURI("http://example.org/body/" + json.id);
-				addStatement(con, f, annotationUri, IOpenAnnotation.PROPERTY_HASBODY_URI, bodyUri, context1);
-				addStatement(con, f, bodyUri, IRdfVocabulary.PROPERTY_TYPE_URI, IDublinCoreTypesVocabulary.CLASS_TEXT_URI, context1);
-				addStatement(con, f, bodyUri, IRdfVocabulary.PROPERTY_TYPE_URI, IContentAsRdfVocabulary.CLASS_CONTENTASTEXT_URI, context1);
-				addStatement(con, f, bodyUri, (IDublinCoreElementsVocabulary.PROPERTY_FORMAT_URI), f.createLiteral(IMimeTypesVocabulary.VALUE_TEXT_JSON), context1);
-				addStatement(con, f, bodyUri, IContentAsRdfVocabulary.PROPERTY_CHARS_URI, f.createLiteral(json.text), context1);
+				createTextualBody(con, f, annotationUri, bodyUri, json.text, context1);
 				
 				// Annotation target
 				org.openrdf.model.URI targetUri = f.createURI("http://example.org/target/" + json.id);
