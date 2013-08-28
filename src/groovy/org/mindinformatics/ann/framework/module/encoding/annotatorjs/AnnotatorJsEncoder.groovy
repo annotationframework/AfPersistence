@@ -21,6 +21,7 @@
 package org.mindinformatics.ann.framework.module.encoding.annotatorjs
 
 import org.codehaus.groovy.grails.web.json.JSONObject
+import org.mindinformatics.ann.framework.module.encoding.IOpenAnnotation
 import org.mindinformatics.ann.framework.module.encoding.IOpenAnnotationJsonEncoder
 import org.openrdf.model.URI
 import org.openrdf.model.ValueFactory
@@ -48,12 +49,12 @@ class AnnotatorJsEncoder implements IOpenAnnotationJsonEncoder {
 				// Annotation type
 				con.add(annotationUri,
 					f.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
-					f.createURI("http://www.w3.org/ns/oa#Annotation"), context1);
+					f.createURI(IOpenAnnotation.CLASS_ANNOTATION_URI), context1);
 				
 				// Annotation body
 				org.openrdf.model.URI bodyUri = f.createURI("http://example.org/body/" + json.id);
 				con.add(annotationUri,
-					f.createURI("http://www.w3.org/ns/oa#hasBody"),
+					f.createURI(IOpenAnnotation.PROPERTY_HASBODY_URI),
 					bodyUri, 
 					context1);
 				con.add(bodyUri,
@@ -73,18 +74,18 @@ class AnnotatorJsEncoder implements IOpenAnnotationJsonEncoder {
 				// Annotation target
 				org.openrdf.model.URI targetUri = f.createURI("http://example.org/target/" + json.id);
 				con.add(annotationUri,
-					f.createURI("http://www.w3.org/ns/oa#hasTarget"),
+					f.createURI(IOpenAnnotation.PROPERTY_HASTARGET_URI),
 					targetUri, context1);
 				con.add(targetUri,
 					f.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
-					f.createURI("http://www.w3.org/ns/oa#SpecificResource"), context1);
+					f.createURI(IOpenAnnotation.CLASS_SPECIFICRESOURCE_URI), context1);
 				con.add(targetUri,
-					f.createURI("http://www.w3.org/ns/oa#hasSource"),
+					f.createURI(IOpenAnnotation.PROPERTY_HASSOURCE_URI),
 					f.createURI(json.uri), context1);
 				// Annotation target selector
 				org.openrdf.model.URI selectorUri = f.createURI("http://example.org/selector/" + json.id);
 				con.add(targetUri,
-					f.createURI("http://www.w3.org/ns/oa#hasSelector"),
+					f.createURI(IOpenAnnotation.PROPERTY_HASSELECTOR_URI),
 					selectorUri, context1);
 				con.add(selectorUri,
 					f.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
