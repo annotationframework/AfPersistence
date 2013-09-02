@@ -1,7 +1,10 @@
 package org.mindinformatics.ann.framework.module.persistence
 
+import grails.converters.JSON
 import org.codehaus.groovy.grails.web.json.JSONObject
 import org.mindinformatics.ann.framework.module.security.users.User
+
+import java.text.SimpleDateFormat
 
 class Annotation {
 
@@ -39,8 +42,13 @@ class Annotation {
             throw new RuntimeException("Cannot convert to JSON when object is empty")
         }
 
-        def jsonObject = new JSONObject()
+        def isoFormatter = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.SZ")
+
+        def jsonObject = JSON.parse(json)
         jsonObject["id"] = id
+        jsonObject["updated"] = isoFormatter.format(lastUpdated)
+        jsonObject["created"] = isoFormatter.format(dateCreated)
+
         println "jsonObject: " + jsonObject
         return jsonObject
 
