@@ -3,11 +3,23 @@ package org.mindinformatics.ann.framework.module.persistence
 import grails.converters.JSON
 import org.codehaus.groovy.grails.web.json.JSONObject
 
+
+/**
+ * Implements the Annotator Storage API methods
+ *
+ * https://github.com/okfn/annotator/wiki/Storage
+ * https://github.com/okfn/annotator-store/blob/master/annotator/store.py
+ */
 class AnnotatorController {
 
     def annotatorService
 
-    static allowedMethods = [create:'POST', destroy:'DELETE', update: 'PUT', search: 'GET', read: 'GET']
+    static allowedMethods = [create:'POST',
+            destroy:'DELETE',
+            update: ['POST','PUT'],
+            search: ['GET','POST'],
+            read: ['GET','POST']
+        ]
 
     /**
      *
@@ -47,8 +59,9 @@ class AnnotatorController {
         }
         else {
             def message = "Unable to locate annotation with ID ${params.id}"
-            render([status: 503, text: message] as JSON)
-
+            //render([status: 503, text: message] as JSON)
+            //response.status = 404
+            render(status: 404, text: "Annotation not found!")
         }
 
     }
@@ -61,12 +74,14 @@ class AnnotatorController {
         // Need to find a way to handle errors
         if (!annotation.hasErrors()) {
             println "Saved annotation " + annotation.toJSONObject()
-            //render annotation.toJSONObject() as JSON
-            redirect(action: "read", id: annotation.id)
+            render annotation.toJSONObject() as JSON
+            //redirect(action: "read", id: annotation.id)
         }
         else {
             println "Annotation has errors " + annotation.errors
-            render([status: 503, text: 'Unable to create annotation', errors: annotation.errors]as JSON)
+            response.status = 400
+            render "No JSON payload sent. Annotation not created."
+            //render([status: 503, text: 'Unable to create annotation', errors: annotation.errors]as JSON)
         }
 
 
@@ -95,14 +110,13 @@ class AnnotatorController {
         println "JSON " + jsonObject.toString()
 
         def annotation = annotatorService.update(jsonObject)
-        //def annotation = Annotation.get(params.id)
-        //annotation.text = jsonObject.text
-        //annotation.quote = jsonObject.quote
-        //annotation.json = jsonObject.toString()
-        //annotation.save()
+        if (!annotation) {
+            render(status: 404, text: "Annotation not found! No update performed")
+            return
+        }
 
-        //render annotation.toJSONObject() as JSON
-        redirect(action: "read", id: annotation.id)
+        println "Updated annotation: " + annotation
+        render annotation.toJSONObject() as JSON
     }
 
     def destroy() {
@@ -111,14 +125,13 @@ class AnnotatorController {
         println "JSON " + jsonObject.toString()
 
         // Delete the annotation
-        def annotation = Annotation.get(params.id)
-        annotation.delete()
+        def deleted = annotatorService.destroy(params.id)
+        if (!deleted) {
+            render(status: 404, text: "Annotation not found! No delete performed")
+        }
 
-        // Return the list of remaining annotations for this page
-        //def annotations = Annotation.findAllByUri(jsonObject.uri)
-        //println "annotations: " + annotations.size()
-        //render ([total: annotations.size, rows: annotations] as JSON)
-        response.status = 204
+
+        render(status: 204, text: "")
     }
 
     def list() {

@@ -1,5 +1,6 @@
 package org.mindinformatics.ann.framework.module.persistence
 
+import com.nimbusds.jose.JOSEObjectType
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
 import com.nimbusds.jose.JWSObject
@@ -14,8 +15,7 @@ import org.codehaus.groovy.grails.web.json.JSONObject
 
 class AnnotatorService {
 
-    private static final String SHARED_KEY = "{my zendesk token}";
-    private static final String SUBDOMAIN  = "{my zendesk subdomain}";
+    private static final String SHARED_KEY = "{shared key}";
 
 
     def serviceMethod() {
@@ -47,23 +47,51 @@ class AnnotatorService {
         //    annotation.addToRanges(range)
         //}
         annotation.save(failOnError: true)
+        return annotation
     }
 
     def update(jsonObject) {
         def annotation = Annotation.get(jsonObject.id)
-
-        // Keep this until we know we're moving away from a relational database table
-        //annotation.text = jsonObject.text
-        //annotation.quote = jsonObject.quote
-
-        annotation.uri = jsonObject.uri
-        annotation.json = jsonObject.toString()
-        annotation.save(failOnError: true)
+        if (annotation) {
+            // Keep this until we know we're moving away from a relational database table
+            //annotation.text = jsonObject.text
+            //annotation.quote = jsonObject.quote
+            annotation.uri = jsonObject.uri
+            annotation.json = jsonObject.toString()
+            annotation.save(failOnError: true)
+        }
+        return annotation
     }
 
 
     def destroy(id) {
-        return Annotation.get(id).delete()
+        def annotation = Annotation.get(id)
+        if (annotation) {
+            annotation.delete()
+            return true
+        }
+        return false
+
+        /*
+        TODO Remove -- just here to show proper workflow
+        if(params.iata){
+            def airport = Airport.findByIata(params.iata)
+            if(airport){
+                airport.delete()
+                render "Successfully Deleted."
+            }
+            else{
+                response.status = 404 //Not Found
+                render "${params.iata} not found."
+            }
+        }
+        else{
+            response.status = 400 //Bad Request
+            render """DELETE request must include the IATA code
+                  Example: /rest/airport/iata
+        """
+        }*/
+
     }
 
     def search(uri) {
@@ -178,12 +206,20 @@ class AnnotatorService {
         JWTClaimsSet jwtClaims = new JWTClaimsSet();
         jwtClaims.setIssueTime(new Date());
         jwtClaims.setJWTID(UUID.randomUUID().toString());
-        // jwtClaims.setCustomClaim("name", user.name);
+        jwtClaims.setCustomClaim("userId", "jmiranda");
+        jwtClaims.setCustomClaim("consumerKey", "openannotation");
+        jwtClaims.setCustomClaim("ttl", 86400);
+        // 2013-08-30T22:23:30+00:00
+        jwtClaims.setCustomClaim("issuedAt", new Date().format("yyyy-MM-dd'T'hh:mm:ssZ"));
+
+
         // jwtClaims.setCustomClaim("email", user.email);
 
         // Create JWS header with HS256 algorithm
+        //JWSHeader
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
         header.setContentType("text/plain");
+        header.setType(JOSEObjectType.JWS)
 
         // Create JWS object
         JWSObject jwsObject = new JWSObject(header, new Payload(jwtClaims.toJSONObject()));
