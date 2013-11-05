@@ -5,7 +5,7 @@ grails.project.target.level = 1.6
 grails.project.source.level = 1.6
 //grails.project.war.file = "target/${appName}-${appVersion}.war"
 
-//grails.plugin.location.'af-security' = '../../annotationframework/AfSecurity'
+grails.plugin.location.'af-security' = '../../annotationframework/AfSecurity'
 
 grails.project.dependency.resolution = {
     // inherit Grails' default dependencies
@@ -43,9 +43,15 @@ grails.project.dependency.resolution = {
 		compile ("org.semweb4j:rdf2go.api:4.8.2")
         compile ("com.nimbusds:nimbus-jose-jwt:2.18")
         compile ("com.googlecode.jsontoken:jsontoken:1.0")
-        //runtime "org.semweb4j:rdf2go.impl.sesame:4.8.2"
-		//runtime "org.semweb4j:rdf2go.api:4.8.2"
-		//compile "org.semweb4j:rdf2go.impl.base:4.6.2"
+		
+		compile ("org.apache.jena:jena-core:2.11.0") {
+			excludes 'slf4j-api', 'xercesImpl'
+		}
+		compile ("org.apache.jena:jena-arq:2.9.3") 
+		
+        runtime "org.semweb4j:rdf2go.impl.sesame:4.8.2"
+		runtime "org.semweb4j:rdf2go.api:4.8.2"
+		compile "org.semweb4j:rdf2go.impl.base:4.6.2"
 		//compile "org.openrdf:openrdf-sesame-onejar-osgi:2.1.2"
 		//compile "org.openrdf.sesame:sesame-query:2.7.2"
 		
@@ -57,7 +63,7 @@ grails.project.dependency.resolution = {
             export = false
         }
 			  
-	    //compile ':spring-security-core:2.0-RC2'
-	    //compile ":spring-security-openid:2.0-RC2"
+	    compile ':spring-security-core:2.0-RC2'
+	    compile ":spring-security-openid:2.0-RC2"
     }
 }

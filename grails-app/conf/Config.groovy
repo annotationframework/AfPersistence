@@ -22,18 +22,18 @@ log4j = {
 // Spring Security Configuration
 // The following have been listed as this plugin depends on the AfSecurity plugin that needs to be configured.
 // -------------------------------------------------------------------------------------------------------------------------------------------
-// grails.plugin.springsecurity.userLookup.userDomainClassName 			= 'org.mindinformatics.ann.framework.module.security.users.User'
-// grails.plugin.springsecurity.userLookup.authorityJoinClassName 			= 'org.mindinformatics.ann.framework.module.security.users.UserRole'
-// grails.plugin.springsecurity.authority.className 						= 'org.mindinformatics.ann.framework.module.security.users.Role'
+grails.plugin.springsecurity.userLookup.userDomainClassName 			= 'org.mindinformatics.ann.framework.module.security.users.User'
+grails.plugin.springsecurity.userLookup.authorityJoinClassName 			= 'org.mindinformatics.ann.framework.module.security.users.UserRole'
+grails.plugin.springsecurity.authority.className 						= 'org.mindinformatics.ann.framework.module.security.users.Role'
 
-// grails.plugin.springsecurity.rememberMe.persistent 						= true
-// grails.plugin.springsecurity.rememberMe.persistentToken.domainClassName = 'org.mindinformatics.ann.framework.module.security.PersistentLogin'
-// grails.plugin.springsecurity.openid.domainClass 						= 'org.mindinformatics.ann.framework.module.security.OpenID'
+grails.plugin.springsecurity.rememberMe.persistent 						= true
+grails.plugin.springsecurity.rememberMe.persistentToken.domainClassName = 'org.mindinformatics.ann.framework.module.security.PersistentLogin'
+grails.plugin.springsecurity.openid.domainClass 						= 'org.mindinformatics.ann.framework.module.security.OpenID'
 
-//grails.plugin.springsecurity.controllerAnnotations.staticRules = [
-//  '/info'				: ['permitAll'],
-//	'/main/**'			: ['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_USER']
-//]
+grails.plugin.springsecurity.controllerAnnotations.staticRules = [
+  '/info'				: ['permitAll'],
+	'/main/**'			: ['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_USER']
+]
 // -------------------------------------------------------------------------------------------------------------------------------------------
 
 grails.views.default.codec	= "none" // none, html, base64
