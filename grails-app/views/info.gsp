@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta name="layout" content="main"/>
-		<title>Annotation Framework: AfSecurity</title>
+		<title>Annotation Framework: <g:meta name="app.name"/></title>
 		<style type="text/css" media="screen">
 			#status {
 				background-color: #eee;
@@ -110,13 +110,27 @@
 			<br/>
 		
 			<div id="controller-list" role="navigation">
-				<h2>Available Controllers:</h2>
+				<h2>Provided Controllers:</h2>
 				<ul>
 					<g:each var="c" in="${grailsApplication.controllerClasses.sort { it.fullName } }">
 						<li class="controller"><g:link controller="${c.logicalPropertyName}">${c.fullName}</g:link></li>
 					</g:each>
 				</ul>
 			</div>
+			
+			<div id="controller-list" role="navigation">
+				<h2>Provided Classes:</h2>
+				<ul>
+					<g:if test="${grailsApplication.getArtefacts("Domain")*.clazz.size()>0}">
+						<g:each var="c" in="${grailsApplication.getArtefacts("Domain")*.clazz}">
+							<li class="controller">${c.name}</li>
+						</g:each>
+					</g:if>
+					<g:else>
+						<li>None</li>
+					</g:else>
+				</ul>
+			</div>	
 			
 			<div id="controller-list" role="navigation">
 				<h2>Annotation Framework Plugins Dependencies</h2>
