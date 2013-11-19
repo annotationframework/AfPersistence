@@ -29,36 +29,36 @@ class AnnotatorController {
         println "Index " + params
         def apiResponse = [
             "name": "Annotator Store API",
-            "version": getGrailsApplication().metadata["app.version"]]
+            "version": getGrailsApplication().metadata["app.version"]
+        ]
+
         render (apiResponse as JSON)
     }
 
     /**
+     * Generates a token to be used to communicate with the annotator store.
      *
-     * https://github.com/okfn/annotator/wiki/Authentication
+     * See https://github.com/okfn/annotator/wiki/Authentication
+     *
      * @return
      */
     def token() {
-        //println "Get token: " + params
-        //def jsonObject = request.JSON
-        //println "JSON " + jsonObject.toString()
-        //response.status = 200
         render(status: 200, text: annotatorService.getToken())
-        //render(status: 200, text: "your-token-has-been-created")
-        //render(status: 503, text: 'Failed to create annotation' + annotation.errors)
     }
 
+    /**
+     * GETs annotations. Server should return an array of annotations serialised as JSON or JSON-LD.
+     *
+     * @return
+     */
     def read() {
-        println "Read " + params
         def jsonObject = request.JSON
-        println "JSON " + jsonObject.toString()
-
         def annotation = Annotation.get(params.id)
         if (annotation) {
             render annotation.toJSONObject() as JSON
         }
         else {
-            def message = "Unable to locate annotation with ID ${params.id}"
+            //def message = "Unable to locate annotation with ID ${params.id}"
             //render([status: 503, text: message] as JSON)
             //response.status = 404
             render(status: 404, text: "Annotation not found!")
@@ -66,89 +66,117 @@ class AnnotatorController {
 
     }
 
+    /**
+     * POSTs an annotation (serialised as JSON or JSON-LD) to the server. The annotation is updated with any data
+     * (such as a newly created id and probably creation/saving date) returned from the server.
+     *
+     * In annotator.js this is called when the annotator publishes the "annotationCreated" event.
+     *
+     * @return
+     */
     def create() {
-        println "Create " + params
-        println "JSON = " + request.JSON
         def annotation = annotatorService.create(request.JSON)
 
         // Need to find a way to handle errors
         if (!annotation.hasErrors()) {
-            println "Saved annotation " + annotation.toJSONObject()
             render annotation.toJSONObject() as JSON
             //redirect(action: "read", id: annotation.id)
         }
         else {
-            println "Annotation has errors " + annotation.errors
             response.status = 400
             render "No JSON payload sent. Annotation not created."
             //render([status: 503, text: 'Unable to create annotation', errors: annotation.errors]as JSON)
         }
-
-
-        /*
-        println "create annotation " + params
-        def jsonObject = request.JSON
-        println "JSON = " + jsonObject
-
-        def annotation = new Annotation(text: jsonObject.text, uri: jsonObject.uri, quote:  jsonObject.quote, json: jsonObject.toString())
-        request.JSON.ranges.each {
-            def range = new AnnotationRange(start: it.start, end: it.end, startOffset: it.startOffset, endOffset:  it.endOffset)
-            annotation.addToRanges(range)
-        }
-        if (!annotation.hasErrors() && annotation.save()) {
-            render annotation as JSON
-        }
-        else {
-            render([status: 503, text: 'Unable to create annotation', errors: annotation.errors]as JSON)
-        }*/
     }
 
 
+    /**
+     * PUTs an annotation (serialised as JSON) on the server under its id. The annotation is updated with any data
+     * (such as a newly created id) returned from the server.
+     *
+     * Called when the annotator publishes the "annotationUpdated" event.
+     *
+     * @return
+     */
     def update() {
-        println "Update " + params
         def jsonObject = request.JSON
-        println "JSON " + jsonObject.toString()
-
         def annotation = annotatorService.update(jsonObject)
         if (!annotation) {
             render(status: 404, text: "Annotation not found! No update performed")
             return
         }
-
-        println "Updated annotation: " + annotation
         render annotation.toJSONObject() as JSON
     }
 
+    /**
+     * Issues a DELETE request to server for the annotation.
+     *
+     * @return
+     */
     def destroy() {
-        println "Destroy " + params
         def jsonObject = request.JSON
-        println "JSON " + jsonObject.toString()
-
         // Delete the annotation
         def deleted = annotatorService.destroy(params.id)
         if (!deleted) {
             render(status: 404, text: "Annotation not found! No delete performed")
+            return;
         }
-
-
         render(status: 204, text: "")
     }
 
+    /**
+     * Issues a PUT and the annotation is marked as deleted but a copy of it is kept in the storage.
+     *
+     * @return
+     */
+    def delete() {
+
+
+    }
+
+
+    /**
+     *
+     * @return
+     */
     def list() {
-        println "List " + params
         def results = Annotation.list().collect { it.toJSONObject() }
         render (results as JSON)
     }
 
+    /**
+     *
+     * @return
+     */
     def annotations() {
         redirect(action: "list")
     }
 
+    /**
+     * Marks data as archived
+     *
+     * @return
+     */
+    def archive() {
 
+    }
+
+
+    /**
+     * GETs all annotations relevant to the query. Should return a JSON object with a rows property
+     * containing an array of annotations.
+     *
+     * @param uri
+     * @param media
+     * @param text
+     * @param user the username or user id
+     * @param source the
+     *
+     * @return
+     */
     def search() {
-        println "Search annotations " + params
         def jsonObject = request.JSON
-        def results = annotatorService.search(params.uri)
+        def results = annotatorService.search(params.uri, params.media, params.text, params.user, params.source)
         render ([total: results.size(), rows: results] as JSON)
     }
 }

@@ -10,7 +10,14 @@ class Annotation {
 
     String uri
     String json
-    //String text
+
+    String text
+    String media
+    String userid
+    String source
+
+    Boolean deleted
+    Boolean archived
     //String quote
 
     Date dateCreated
@@ -22,20 +29,29 @@ class Annotation {
 
     static constraints = {
         uri(nullable: false)
-        json(nullable: false)
+        media(nullable: true)
+        text(nullable: true)
+        userid(nullable: true)
+        source(nullable: true)
         owner(nullable: true)
-        //text(nullable: true)
+        json(nullable: false)
+        deleted(nullable: true)
+        archived(nullable: true)
         //quote(nullable: false)
     }
 
     static mapping = {
         uri sqlType:"text"
         json sqlType:"text"
-        //text sqlType:"text"
+        text sqlType:"text"
         //quote sqlType:"text"
     }
 
-
+    /**
+     * Converts domain object to JSON format.
+     *
+     * @return
+     */
     JSONObject toJSONObject() {
         println "toJSONObject " + json
         if (!json) {
@@ -43,7 +59,6 @@ class Annotation {
         }
 
         def isoFormatter = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.SZ")
-
         def jsonObject = JSON.parse(json)
         jsonObject["id"] = id
         jsonObject["updated"] = isoFormatter.format(lastUpdated)

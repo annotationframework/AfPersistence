@@ -17,53 +17,86 @@ class AnnotatorService {
 
     private static final String SHARED_KEY = "{shared key}";
 
-
-    def serviceMethod() {
-
-    }
-
     /**
-     * I don't love that this method uses a web layer class, but will deal with it in the short-term.
+     * Create an annotation using properties from the given the json object.
+     *
      * @param jsonObject
      * @return
      */
-    def convertToOpenAnnotation(JSONObject jsonObject) {
-        // Need to determine the input format somehow (hopefully there's some indication within the JSON
-
-        // Should have a registry of deserializers / serializers to
-
-        return ""
-    }
-
     def create(jsonObject) {
-        println "JSON = " + jsonObject
-        def annotation = new Annotation(uri: jsonObject.uri, json: jsonObject.toString())
-
-
-        // Keep this until we know we're moving away from a relational database table
-        //def annotation = new Annotation(text: jsonObject.text, uri: jsonObject.uri, quote:  jsonObject.quote, json: jsonObject.toString())
-        //request.JSON.ranges.each { 
-        //    def range = new AnnotationRange(start: it.start, end: it.end, startOffset: it.startOffset, endOffset:  it.endOffset)
-        //    annotation.addToRanges(range)
-        //}
+        def annotation = new Annotation(
+            uri: jsonObject.uri,
+            json: jsonObject.toString(),
+            text: jsonObject.text,
+            media: jsonObject?.media,
+            source: jsonObject?.target?.src,
+            userid:  jsonObject?.user?.id?:jsonObject?.user?.name
+        )
         annotation.save(failOnError: true)
         return annotation
     }
 
+    /**
+     * Update the annotation using properties from the given json obkect
+     *
+     * @param jsonObject
+     * @return
+     */
     def update(jsonObject) {
         def annotation = Annotation.get(jsonObject.id)
         if (annotation) {
-            // Keep this until we know we're moving away from a relational database table
-            //annotation.text = jsonObject.text
-            //annotation.quote = jsonObject.quote
             annotation.uri = jsonObject.uri
             annotation.json = jsonObject.toString()
+
+            if (jsonObject.text) annotation.text= jsonObject.text
+            if (jsonObject.media) annotation.media= jsonObject?.media
+            if (jsonObject.target) annotation.source= jsonObject?.target?.src
+            if (jsonObject.user) annotation.userid=  jsonObject?.user?.id?:jsonObject?.user?.name
+
             annotation.save(failOnError: true)
         }
         return annotation
     }
 
+    /**
+     * Mark annotation as deleted.
+     *
+     * @param id
+     */
+    def delete(id) {
+        def annotation = Annotation.get(id)
+        if (annotation) {
+            annotation.deleted = true
+            annotation.save()
+            return true
+        }
+        return false
 
+    }
+
+
+    /**
+     * Mark annotation as deleted.
+     *
+     * @param id
+     */
+    def archive(id) {
+        def annotation = Annotation.get(id)
+        if (annotation) {
+            annotation.archived = true
+            annotation.save()
+            return true
+        }
+        return false
+
+    }
+
+
+    /**
+     *
+     * @param id
+     * @return
+     */
     def destroy(id) {
         def annotation = Annotation.get(id)
         if (annotation) {
@@ -71,36 +104,47 @@ class AnnotatorService {
             return true
         }
         return false
-
-        /*
-        TODO Remove -- just here to show proper workflow
-        if(params.iata){
-            def airport = Airport.findByIata(params.iata)
-            if(airport){
-                airport.delete()
-                render "Successfully Deleted."
-            }
-            else{
-                response.status = 404 //Not Found
-                render "${params.iata} not found."
-            }
-        }
-        else{
-            response.status = 400 //Bad Request
-            render """DELETE request must include the IATA code
-                  Example: /rest/airport/iata
-        """
-        }*/
-
-    }
-
-    def search(uri) {
-        return Annotation.findAllByUri(uri).collect { it.toJSONObject() }
     }
 
     /**
-     * Generate a token to be used by the annotator client.  Need to move this
-     * https://github.com/okfn/annotator/wiki/Authentication
+     * Search annotations by uri
+     *
+     * @param uri
+     * @return
+     */
+    def search(uri) {
+        //return Annotation.findAllByUri(uri).collect { it.toJSONObject() }
+        def query = Annotation.where {
+            uri == uri
+        }
+        return query.list().collect { it.toJSONObject() }
+    }
+
+    /**
+     * Search the annotator store for annotations that match all of these
+     *
+     * @param uri
+     * @param media
+     * @param text
+     * @param username
+     *
+     * @return a list of annotations that match the given parameters
+     */
+    def search(uri, media, text, userid, source) {
+        def query = Annotation.where {
+            if (uri) uri =~ uri + "%"
+            if (media) media == media
+            if (text) text =~ "%" + text + "%"
+            if (userid) userid == userid
+            if (source) source == source
+        }
+        return query.list().collect { it.toJSONObject() }
+    }
+
+    /**
+     * Generate a token to be used by the annotator client.  Not used at the moment.
+     *
+     * See https://github.com/okfn/annotator/wiki/Authentication
      */
     def generateToken() {
         // Create JWS payload

@@ -54,7 +54,7 @@ grails.project.dependency.resolution = {
 		compile "org.semweb4j:rdf2go.impl.base:4.6.2"
 		//compile "org.openrdf:openrdf-sesame-onejar-osgi:2.1.2"
 		//compile "org.openrdf.sesame:sesame-query:2.7.2"
-		
+
     }
 
     plugins {
@@ -62,8 +62,10 @@ grails.project.dependency.resolution = {
               ":release:1.0.0") {
             export = false
         }
-			  
+
 	    compile ':spring-security-core:2.0-RC2'
 	    compile ":spring-security-openid:2.0-RC2"
+
+        //test ":build-test-data:2.0.5"
     }
 }
