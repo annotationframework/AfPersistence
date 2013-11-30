@@ -2,37 +2,47 @@ package org.mindinformatics.ann.framework.module.persistence
 
 import grails.converters.JSON
 import org.codehaus.groovy.grails.web.json.JSONObject
+import org.springframework.security.access.annotation.Secured
 
 
 /**
- * Implements the Annotator Storage API methods
+ * Implements the Annotator Storage API methods based on Annotator's requirements.
  *
  * https://github.com/okfn/annotator/wiki/Storage
  * https://github.com/okfn/annotator-store/blob/master/annotator/store.py
+ *
+ * NOTE:  Access control is set to anonymous because we have our own token
+ * validation mechanism used to validate incoming requests.  For more
+ * information, see AuthTokenFilters.groovy.
  */
+@Secured(['IS_AUTHENTICATED_ANONYMOUSLY'])
 class AnnotatorController {
 
     def annotatorService
 
-    static allowedMethods = [create:'POST',
+    static allowedMethods = [
+            create:'POST',
             destroy:'DELETE',
             update: ['POST','PUT'],
+            archive: ['POST', 'PUT'],
+            delete: ['POST', 'PUT', 'DELETE'],
             search: ['GET','POST'],
             read: ['GET','POST']
         ]
 
     /**
+     * Should be used in generating documentation for apiary, swagger, or
+     * other API documentation frameworks.
      *
-     * @return
+     * @return metadata about the API
      */
     def index() {
-        println "Index " + params
-        def apiResponse = [
+        def data = [
             "name": "Annotator Store API",
             "version": getGrailsApplication().metadata["app.version"]
         ]
 
-        render (apiResponse as JSON)
+        render (data as JSON)
     }
 
     /**
@@ -44,6 +54,42 @@ class AnnotatorController {
      */
     def token() {
         render(status: 200, text: annotatorService.getToken())
+    }
+
+    /**
+     * Returns a list of all annotations in the database.
+     *
+     * TODO We should probably remove this since it gives a bit too much away.
+     *
+     * @return
+     */
+    def list() {
+        def results = Annotation.list().collect { it.toJSONObject() }
+        render (results as JSON)
+    }
+
+    /**
+     * GETs all annotations relevant to the query. Should return a JSON object with a rows property
+     * containing an array of annotations.
+     *
+     * @param uri
+     * @param media
+     * @param text
+     * @param user
+     * @param source
+     * @param parent
+     *
+     * @return
+     */
+    def search() {
+        def jsonObject = request.JSON
+        def limit = params.limit?:10
+        def offset = params.offset?:0
+        def results = annotatorService.search(params.uri, params.media, params.text, params.user, params.source, params.parent, offset as int, limit as int)
+        def totalCount = results?.totalCount
+        def rows = results?.annotations?.collect { it.toJSONObject() }
+
+        render ([total: totalCount, limit: limit, offset: offset, rows: rows] as JSON)
     }
 
     /**
@@ -130,53 +176,31 @@ class AnnotatorController {
      * @return
      */
     def delete() {
-
-
-    }
-
-
-    /**
-     *
-     * @return
-     */
-    def list() {
-        def results = Annotation.list().collect { it.toJSONObject() }
-        render (results as JSON)
+        def jsonObject = request.JSON
+        def annotation = annotatorService.delete(jsonObject.id)
+        if (!annotation) {
+            render(status: 404, text: "Annotation not found! No update performed")
+            return
+        }
+        render annotation.toJSONObject() as JSON
     }
 
     /**
-     *
-     * @return
-     */
-    def annotations() {
-        redirect(action: "list")
-    }
-
-    /**
-     * Marks data as archived
+     * Issues a PUT and the annotation is marked as archived but a copy of it is kept in the storage.
      *
      * @return
      */
     def archive() {
-
-    }
-
-
-    /**
-     * GETs all annotations relevant to the query. Should return a JSON object with a rows property
-     * containing an array of annotations.
-     *
-     * @param uri
-     * @param media
-     * @param text
-     * @param user the username or user id
-     * @param source the
-     *
-     * @return
-     */
-    def search() {
         def jsonObject = request.JSON
-        def results = annotatorService.search(params.uri, params.media, params.text, params.user, params.source)
-        render ([total: results.size(), rows: results] as JSON)
+        def annotation = annotatorService.archive(jsonObject.id)
+        if (!annotation) {
+            render(status: 404, text: "Annotation not found! No update performed")
+            return
+        }
+        render annotation.toJSONObject() as JSON
+
+
     }
+
+
 }

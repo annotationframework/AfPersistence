@@ -24,13 +24,16 @@ class AnnotatorService {
      * @return
      */
     def create(jsonObject) {
+        def parent = jsonObject.parent ? Annotation.get(jsonObject.parent) : null
         def annotation = new Annotation(
             uri: jsonObject.uri,
             json: jsonObject.toString(),
             text: jsonObject.text,
+            quote: jsonObject.quote,
             media: jsonObject?.media,
             source: jsonObject?.target?.src,
-            userid:  jsonObject?.user?.id?:jsonObject?.user?.name
+            userid:  jsonObject?.user?.name?:jsonObject?.user?.id,
+            parent: parent
         )
         annotation.save(failOnError: true)
         return annotation
@@ -48,11 +51,14 @@ class AnnotatorService {
             annotation.uri = jsonObject.uri
             annotation.json = jsonObject.toString()
 
-            if (jsonObject.text) annotation.text= jsonObject.text
-            if (jsonObject.media) annotation.media= jsonObject?.media
-            if (jsonObject.target) annotation.source= jsonObject?.target?.src
-            if (jsonObject.user) annotation.userid=  jsonObject?.user?.id?:jsonObject?.user?.name
-
+            if (jsonObject.text) annotation.text = jsonObject.text
+            if (jsonObject.media) annotation.media = jsonObject?.media
+            if (jsonObject.target) annotation.source = jsonObject?.target?.src
+            if (jsonObject.user) annotation.userid = jsonObject?.user?.name?:jsonObject?.user?.id
+            if (jsonObject.quote) annotation.quote = jsonObject?.quote
+            if (jsonObject.parent) {
+                annotation.parent = Annotation.get(jsonObject.parent)
+            }
             annotation.save(failOnError: true)
         }
         return annotation
@@ -93,6 +99,7 @@ class AnnotatorService {
 
 
     /**
+     * Destroy annotation.
      *
      * @param id
      * @return
@@ -112,12 +119,12 @@ class AnnotatorService {
      * @param uri
      * @return
      */
-    def search(uri) {
+    def search(uri, offset, limit) {
         //return Annotation.findAllByUri(uri).collect { it.toJSONObject() }
         def query = Annotation.where {
             uri == uri
         }
-        return query.list().collect { it.toJSONObject() }
+        return query.list([offset:offset, max:limit]).collect { it.toJSONObject() }
     }
 
     /**
@@ -130,121 +137,32 @@ class AnnotatorService {
      *
      * @return a list of annotations that match the given parameters
      */
-    def search(uri, media, text, userid, source) {
+    def search(uri, media, text, userid, source, parentid, offset, limit) {
+
+        def parent = Annotation.get(parentid)
         def query = Annotation.where {
             if (uri) uri =~ uri + "%"
             if (media) media == media
             if (text) text =~ "%" + text + "%"
             if (userid) userid == userid
             if (source) source == source
+            if (parentid && parent) parent == parent
         }
-        return query.list().collect { it.toJSONObject() }
+
+        // FIXME Don't like that I need to do execute two queries here
+        def results = query.list([offset: offset, max: limit])
+        def totalCount = query.list().size()
+
+        return [annotations: results, totalCount: totalCount]
     }
 
+
     /**
-     * Generate a token to be used by the annotator client.  Not used at the moment.
+     * Generate a sample JWT token.
      *
-     * See https://github.com/okfn/annotator/wiki/Authentication
+     * @return
      */
-    def generateToken() {
-        // Create JWS payload
-        Payload payload = new Payload("Hello world!");
-
-        // Create JWS header with HS256 algorithm
-        JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
-        header.setContentType("text/plain");
-
-        // Create JWS object
-        JWSObject jwsObject = new JWSObject(header, payload);
-
-        // Create HMAC signer
-        String sharedKey = "our-shared-key";
-        JWSSigner signer = new MACSigner(sharedKey.getBytes());
-        jwsObject.sign(signer);
-
-        // Serialise JWS object to compact format
-        String s = jwsObject.serialize();
-        println("Serialised JWS object: " + s);
-
-        // Parse back and check signature
-        jwsObject = JWSObject.parse(s);
-
-        JWSVerifier verifier = new MACVerifier(sharedKey.getBytes());
-        boolean verifiedSignature = jwsObject.verify(verifier);
-        if (verifiedSignature)
-            println("Verified JWS signature!");
-        else
-            println("Bad JWS signature!");
-
-        println("Recovered payload message: " + jwsObject.getPayload());
-        return jwsObject.getPayload()
-    }
-
-
-
-    /**
-     * Oracle implementation -- cannot find Oracle Security jar
-     * http://docs.oracle.com/cd/E23943_01/apirefs.1111/e26380/oracle/security/restsec/jwt/JwtToken.html
-     */
-    /*
-    def generateTokenUsingOracle() {
-        JwtToken jwtToken = new JwtToken();
-        jwtToken.setType(JwtToken.JWT);
-        jwtToken.setIssuer("my.oracle.com");
-        jwtToken.setPrincipal("john.doe");
-        String jwtString = jwtToken.serializeUnsigned();
-    }
-    */
-
-    def generateTokenUsingJsonToken() {
-        //HmacSHA256Signer signer = new HmacSHA256Signer("google.com", "key2", SYMMETRIC_KEY);
-        //JsonToken token = new JsonToken(signer, clock);
-        //token.setParam("bar", 15);
-        //token.setParam("foo", "some value");
-        //token.setAudience("http://www.google.com");
-        //token.setIssuedAt(clock.now());
-        //token.setExpiration(clock.now().withDurationAdded(60, 1));
-        //return token.serializeAndSign();
-    }
-
-    /*
-    private String getJWT() throws InvalidKeyException, SignatureException {
-        JsonToken token = null;
-        token = createToken();
-        return token.serializeAndSign();
-    }
-    */
-    /*
-    private JsonToken createToken() throws InvalidKeyException{
-        //Current time and signing algorithm
-        Calendar cal = Calendar.getInstance();
-        HmacSHA256Signer signer = new HmacSHA256Signer(ISSUER, null, SIGNING_KEY.getBytes());
-
-        //Configure JSON token
-        JsonToken token = new JsonToken(signer);
-        token.setAudience("Google");
-        token.setParam("typ", "google/payments/inapp/item/v1");
-        token.setIssuedAt(new Instant(cal.getTimeInMillis()));
-        token.setExpiration(new Instant(cal.getTimeInMillis() + 60000L));
-
-        //Configure request object
-        JsonObject request = new JsonObject();
-        request.addProperty("name", "Piece of Cake");
-        request.addProperty("description", "Virtual chocolate cake to fill your virtual tummy");
-        request.addProperty("price", "10.50");
-        request.addProperty("currencyCode", "USD");
-        request.addProperty("sellerData", "user_id:1224245,offer_code:3098576987,affiliate:aksdfbovu9j");
-
-        JsonObject payload = token.getPayloadAsJsonObject();
-        payload.add("request", request);
-
-        return token;
-    }
-    */
-
-
     def getToken() {
-
         // Given a user instance
         // Compose the JWT claims set
         JWTClaimsSet jwtClaims = new JWTClaimsSet();
@@ -283,5 +201,45 @@ class AnnotatorService {
         //String jwtString = jwsObject.serialize();
         return jwsObject.serialize()
     }
+
+    /**
+     * Generate a token to be used by the annotator client.  Not used at the moment.
+     *
+     * See https://github.com/okfn/annotator/wiki/Authentication
+    def generateToken() {
+        // Create JWS payload
+        Payload payload = new Payload("Hello world!");
+
+        // Create JWS header with HS256 algorithm
+        JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
+        header.setContentType("text/plain");
+
+        // Create JWS object
+        JWSObject jwsObject = new JWSObject(header, payload);
+
+        // Create HMAC signer
+        String sharedKey = "our-shared-key";
+        JWSSigner signer = new MACSigner(sharedKey.getBytes());
+        jwsObject.sign(signer);
+
+        // Serialise JWS object to compact format
+        String s = jwsObject.serialize();
+        println("Serialised JWS object: " + s);
+
+        // Parse back and check signature
+        jwsObject = JWSObject.parse(s);
+
+        JWSVerifier verifier = new MACVerifier(sharedKey.getBytes());
+        boolean verifiedSignature = jwsObject.verify(verifier);
+        if (verifiedSignature)
+            println("Verified JWS signature!");
+        else
+            println("Bad JWS signature!");
+
+        println("Recovered payload message: " + jwsObject.getPayload());
+        return jwsObject.getPayload()
+    }
+     */
+
 
 }
