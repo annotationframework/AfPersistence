@@ -1,13 +1,18 @@
 class UrlMappings {
 
 	static mappings = {
-		"/$controller/$action?/$id?"{
+
+        "/api/$action/$id?"{
+            controller = 'annotator'
+        }
+
+        "/$controller/$action?/$id?"{
 			constraints {
 				// apply constraints here
 			}
 		}
 
-		"/"(view:"/info")
+        "/"(view:"/info")
 		"500"(view:'/error')
 	}
 }
