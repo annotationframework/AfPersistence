@@ -12,6 +12,7 @@ class Annotation {
     String quote
     String media
     String userid
+    String username
     String source
     String uri
 
@@ -26,7 +27,8 @@ class Annotation {
     Date lastUpdated
     User owner
 
-    //static hasMany = [ranges : AnnotationRange]
+    static transients = ["comments"]
+    static hasMany = [tags : Tag]
 
     static constraints = {
         uri(nullable: false)
@@ -34,6 +36,7 @@ class Annotation {
         text(nullable: true)
         quote(nullable: true)
         userid(nullable: true)
+        username(nullable: true)
         source(nullable: true)
         owner(nullable: true)
         json(nullable: false)
@@ -49,22 +52,39 @@ class Annotation {
         quote sqlType:"text"
     }
 
+    def getComments() {
+        //return Annotation.findAllByParent(this)
+        return Annotation.where {
+            ((deleted == false || deleted == null) && (archived == false || archived == null))
+            parent == this
+        }.list([sort:"dateCreated", order: "desc"])
+    }
+
     /**
      * Converts domain object to JSON format.
      *
      * @return
      */
     JSONObject toJSONObject() {
-        println "toJSONObject " + json
         if (!json) {
             throw new RuntimeException("Cannot convert to JSON - object is empty")
         }
 
         def isoFormatter = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.SZ")
         def jsonObject = JSON.parse(json)
-        jsonObject["id"] = id
-        jsonObject["updated"] = isoFormatter.format(lastUpdated)
-        jsonObject["created"] = isoFormatter.format(dateCreated)
+        jsonObject.id = id
+        jsonObject.updated = lastUpdated?isoFormatter.format(lastUpdated):null
+        jsonObject.created = dateCreated?isoFormatter.format(dateCreated):null
+        jsonObject.totalComments = comments.size()
+        jsonObject.archived = archived?:false
+        jsonObject.deleted = deleted?:false
+
+        // Removed the obfuscation code
+        //if (jsonObject.geolocation) {
+        //    jsonObject.geolocation.latitude = 0.0
+        //    jsonObject.geolocation.longitude = 0.0
+        //}
+
         return jsonObject
 
     }

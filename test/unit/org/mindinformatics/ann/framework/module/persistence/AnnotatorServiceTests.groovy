@@ -10,19 +10,16 @@ import org.junit.*
 @TestFor(AnnotatorService)
 class AnnotatorServiceTests {
 
-    //def annotatorService
-
     @Test
-    void generateToken_shouldDoSomething() {
-        def expectedToken = "eyJhbGciOiJIUzI1NiIsImN0eSI6InRleHRcL3BsYWluIn0.eyJqdGkiOiI3MDk2ZTcwZS04MmM0LTRlMDQtODMwOC05NTVkYTkxNzQzODEiLCJpYXQiOjEzNzc0NTU3NDh9.ybRphsHq27Jb5YchBfODTu9qZJaaBKx7XKOZTJsjKa8"
-        println("LOCATION: " + Base64.class.getProtectionDomain().getCodeSource().getLocation());
-        def annotatorService = new AnnotatorService()
-        def actualToken = annotatorService.getToken()
+    void generateToken_shouldGenerateAndVerifyToken() {
+        def calendar = Calendar.getInstance()
+        calendar.set(2013, 1, 1)
+        def issuedAt = calendar.getTime()
+        def actualToken = service.getToken("jmiranda", "openannotation", 86400, issuedAt)
         println actualToken
 
-        assertEquals expectedToken, actualToken
+        assertTrue service.verifyToken(actualToken)
     }
-
 
 
 }

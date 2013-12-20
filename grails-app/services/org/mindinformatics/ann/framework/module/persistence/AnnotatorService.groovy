@@ -1,5 +1,6 @@
 package org.mindinformatics.ann.framework.module.persistence
 
+import com.nimbusds.jose.JOSEException
 import com.nimbusds.jose.JOSEObjectType
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
@@ -32,9 +33,16 @@ class AnnotatorService {
             quote: jsonObject.quote,
             media: jsonObject?.media,
             source: jsonObject?.target?.src,
-            userid:  jsonObject?.user?.name?:jsonObject?.user?.id,
+            userid:  jsonObject?.user?.id,
+            username: jsonObject?.user?.name,
             parent: parent
         )
+        println "Adding tags " + jsonObject.tags
+        if (jsonObject.tags) {
+            updateTags(annotation, jsonObject.tags)
+        }
+
+
         annotation.save(failOnError: true)
         return annotation
     }
@@ -46,7 +54,10 @@ class AnnotatorService {
      * @return
      */
     def update(jsonObject) {
+
+        println "Update: ${jsonObject.id}"
         def annotation = Annotation.get(jsonObject.id)
+        println "annotation: ${annotation}"
         if (annotation) {
             annotation.uri = jsonObject.uri
             annotation.json = jsonObject.toString()
@@ -54,15 +65,37 @@ class AnnotatorService {
             if (jsonObject.text) annotation.text = jsonObject.text
             if (jsonObject.media) annotation.media = jsonObject?.media
             if (jsonObject.target) annotation.source = jsonObject?.target?.src
-            if (jsonObject.user) annotation.userid = jsonObject?.user?.name?:jsonObject?.user?.id
+            if (jsonObject.user) annotation.userid = jsonObject?.user?.id?:jsonObject?.user?.name
             if (jsonObject.quote) annotation.quote = jsonObject?.quote
             if (jsonObject.parent) {
                 annotation.parent = Annotation.get(jsonObject.parent)
             }
+            if (jsonObject.tags) {
+                updateTags(annotation, jsonObject.tags)
+            }
+
             annotation.save(failOnError: true)
         }
         return annotation
     }
+
+    def updateTags(annotation, tags) {
+        // Associate all tags with the given
+        if (tags) {
+            annotation?.tags?.clear()
+            tags.each { tagName ->
+                def tag = Tag.findByName(tagName)
+                if (!tag) {
+                    tag = new Tag(name: tagName)
+                }
+                if (!annotation?.tags?.contains(tag)) {
+                    annotation.addToTags(tag)
+                }
+            }
+        }
+
+    }
+
 
     /**
      * Mark annotation as deleted.
@@ -107,7 +140,7 @@ class AnnotatorService {
     def destroy(id) {
         def annotation = Annotation.get(id)
         if (annotation) {
-            annotation.delete()
+            annotation.delete(flush:true)
             return true
         }
         return false
@@ -137,44 +170,70 @@ class AnnotatorService {
      *
      * @return a list of annotations that match the given parameters
      */
-    def search(uri, media, text, userid, source, parentid, offset, limit) {
-
-        def parent = Annotation.get(parentid)
+    def search(params) {
+        println "Search with params: " + params
         def query = Annotation.where {
-            if (uri) uri =~ uri + "%"
-            if (media) media == media
-            if (text) text =~ "%" + text + "%"
-            if (userid) userid == userid
-            if (source) source == source
-            if (parentid && parent) parent == parent
+            ((deleted == false || deleted == null) && (archived == false || archived == null))
+            if (params.uri) uri =~ params.uri + "%"
+            if (params.media) media == params.media
+            if (params.quote) quote =~ "%" + params.quote + "%"
+            if (params.text) text =~ "%" + params.text + "%"
+            if (params.userid) userid == params.userid
+            if (params.username) username == params.username
+            if (params.source) source == params.source
+            if (params.dateCreatedOnOrAfter) {
+                dateCreated >= params.dateCreatedOnOrAfter
+            }
+            if (params.dateCreatedOnOrBefore) {
+                dateCreated <= params.dateCreatedOnOrBefore
+            }
+            if (params.parentid) {
+                def parentAnnotation = Annotation.get(params.parentid)
+                parent == parentAnnotation
+            }
+            if (params.tag) {
+                tags {
+                    name =~ "%" + params.tag + "%"
+                }
+            }
         }
 
         // FIXME Don't like that I need to do execute two queries here
-        def results = query.list([offset: offset, max: limit])
+        def results = query.list([offset: params.offset, max: params.limit, sort:"dateCreated", order: "desc"])
+        //results = results.reverse()
         def totalCount = query.list().size()
 
         return [annotations: results, totalCount: totalCount]
     }
 
+    /**
+     * Generate a java web token.
+     *
+     * @param userId
+     * @param consumerKey
+     * @param ttl
+     * @return
+     */
+    def getToken(userId, consumerKey, ttl) {
+        return getToken(userId, consumerKey, ttl, new Date())
+    }
+
 
     /**
-     * Generate a sample JWT token.
+     * Generate a java web token.
      *
      * @return
      */
-    def getToken() {
+    def getToken(userId, consumerKey, ttl, issuedAt) {
         // Given a user instance
         // Compose the JWT claims set
         JWTClaimsSet jwtClaims = new JWTClaimsSet();
-        jwtClaims.setIssueTime(new Date());
+        jwtClaims.setIssueTime(issuedAt);
         jwtClaims.setJWTID(UUID.randomUUID().toString());
-        jwtClaims.setCustomClaim("userId", "jmiranda");
-        jwtClaims.setCustomClaim("consumerKey", "openannotation");
-        jwtClaims.setCustomClaim("ttl", 86400);
-        // 2013-08-30T22:23:30+00:00
-        jwtClaims.setCustomClaim("issuedAt", new Date().format("yyyy-MM-dd'T'hh:mm:ssZ"));
-
-
+        jwtClaims.setCustomClaim("userId", userId);
+        jwtClaims.setCustomClaim("consumerKey", consumerKey);
+        jwtClaims.setCustomClaim("ttl", ttl);
+        jwtClaims.setCustomClaim("issuedAt", issuedAt.format("yyyy-MM-dd'T'hh:mm:ssZ")); // e.g. 2013-08-30T22:23:30+00:00
         // jwtClaims.setCustomClaim("email", user.email);
 
         // Create JWS header with HS256 algorithm
@@ -192,7 +251,7 @@ class AnnotatorService {
 
         try {
             jwsObject.sign(signer);
-        } catch(com.nimbusds.jose.JOSEException e) {
+        } catch(JOSEException e) {
             System.err.println("Error signing JWT: " + e.getMessage());
             return;
         }
@@ -200,6 +259,18 @@ class AnnotatorService {
         // Serialise to JWT compact form
         //String jwtString = jwsObject.serialize();
         return jwsObject.serialize()
+    }
+
+    /**
+     *
+     * @param token
+     * @return
+     */
+    def verifyToken(token) {
+        def jwsObject = JWSObject.parse(token);
+        JWSVerifier verifier = new MACVerifier(SHARED_KEY.getBytes());
+        println "Payload: ${jwsObject.payload}"
+        return jwsObject.verify(verifier)
     }
 
     /**

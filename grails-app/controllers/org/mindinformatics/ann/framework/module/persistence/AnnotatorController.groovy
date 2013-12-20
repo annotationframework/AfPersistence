@@ -53,7 +53,7 @@ class AnnotatorController {
      * @return
      */
     def token() {
-        render(status: 200, text: annotatorService.getToken())
+        render(status: 200, text: annotatorService.getToken("jmiranda", "openannotation", 86400))
     }
 
     /**
@@ -82,14 +82,17 @@ class AnnotatorController {
      * @return
      */
     def search() {
-        def jsonObject = request.JSON
-        def limit = params.limit?:10
-        def offset = params.offset?:0
-        def results = annotatorService.search(params.uri, params.media, params.text, params.user, params.source, params.parent, offset as int, limit as int)
-        def totalCount = results?.totalCount
-        def rows = results?.annotations?.collect { it.toJSONObject() }
+        //println params
+        //def jsonObject = request.JSON
+        //uri, media, text, userid, source, parentid, offset, limit
+        //params.uri, params.media, params.text, params.user, params.source, params.parent,
+        params.limit = params.limit?:10
+        params.offset = params.offset?:0
+        def results = annotatorService.search(params)
 
-        render ([total: totalCount, limit: limit, offset: offset, rows: rows] as JSON)
+        def rows = results.annotations.collect { it.toJSONObject() }
+
+        render ([total: results.totalCount, limit: params.limit, offset: params.offset, rows: rows] as JSON)
     }
 
     /**
@@ -148,7 +151,7 @@ class AnnotatorController {
         def jsonObject = request.JSON
         def annotation = annotatorService.update(jsonObject)
         if (!annotation) {
-            render(status: 404, text: "Annotation not found! No update performed")
+            render(status: 404, text: "Annotation ${params.id} was not found!") as JSON
             return
         }
         render annotation.toJSONObject() as JSON
@@ -160,14 +163,12 @@ class AnnotatorController {
      * @return
      */
     def destroy() {
-        def jsonObject = request.JSON
-        // Delete the annotation
         def deleted = annotatorService.destroy(params.id)
         if (!deleted) {
-            render(status: 404, text: "Annotation not found! No delete performed")
+            render(status: 404, text: "Annotation ${params.id} was not destroyed!") as JSON
             return;
         }
-        render(status: 204, text: "")
+        render(status: 204, text: "Annotation deleted successfully") as JSON
     }
 
     /**
@@ -176,13 +177,16 @@ class AnnotatorController {
      * @return
      */
     def delete() {
-        def jsonObject = request.JSON
-        def annotation = annotatorService.delete(jsonObject.id)
-        if (!annotation) {
-            render(status: 404, text: "Annotation not found! No update performed")
+        def deleted = annotatorService.delete(params.id)
+        if (!deleted) {
+            render(status: 404, text: "Annotation ${params.id} was not deleted!") as JSON
             return
         }
-        render annotation.toJSONObject() as JSON
+        else {
+            def annotation = Annotation.get(params.id)
+            render annotation.toJSONObject() as JSON
+        }
+        //render(status: 202, text: "Annotation marked for deletion")
     }
 
     /**
@@ -191,13 +195,14 @@ class AnnotatorController {
      * @return
      */
     def archive() {
-        def jsonObject = request.JSON
-        def annotation = annotatorService.archive(jsonObject.id)
-        if (!annotation) {
-            render(status: 404, text: "Annotation not found! No update performed")
-            return
+        def archived = annotatorService.archive(params.id)
+        if (!archived) {
+            render(status: 404, text: "Annotation ${params.id} was not archived") as JSON
         }
-        render annotation.toJSONObject() as JSON
+        else {
+            def annotation = Annotation.get(params.id)
+            render annotation.toJSONObject() as JSON
+        }
 
 
     }
