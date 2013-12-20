@@ -65,7 +65,10 @@ grails.project.dependency.resolution = {
 
 	    compile ':spring-security-core:2.0-RC2'
 	    compile ":spring-security-openid:2.0-RC2"
+        compile ":build-test-data:2.0.9"
+        compile ":functional-test:1.2.7"
+        //runtime ":httplogger:1.1"
 
-        //test ":build-test-data:2.0.5"
+
     }
 }
