@@ -42,7 +42,7 @@ grails.project.dependency.resolution = {
 		compile ("org.semweb4j:rdf2go.impl.sesame:4.8.2")
 		compile ("org.semweb4j:rdf2go.api:4.8.2")
         compile ("com.nimbusds:nimbus-jose-jwt:2.20")
-        compile ("com.googlecode.jsontoken:jsontoken:1.0")
+        //compile ("com.googlecode.jsontoken:jsontoken:1.0")
 		
 		compile ("org.apache.jena:jena-core:2.11.0") {
 			excludes 'slf4j-api', 'xercesImpl'
@@ -66,9 +66,9 @@ grails.project.dependency.resolution = {
 	    compile ':spring-security-core:2.0-RC2'
 	    compile ":spring-security-openid:2.0-RC2"
         compile ":build-test-data:2.0.9"
-        compile ":functional-test:1.2.7"
-        //runtime ":httplogger:1.1"
-
+        compile (":functional-test:1.2.7") {
+            excludes "commons-codec"
+        }
 
     }
 }

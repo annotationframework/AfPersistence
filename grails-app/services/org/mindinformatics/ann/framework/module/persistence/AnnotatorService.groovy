@@ -12,6 +12,7 @@ import com.nimbusds.jose.crypto.MACSigner
 import com.nimbusds.jose.crypto.MACVerifier
 import com.nimbusds.jwt.JWTClaimsSet
 import grails.converters.JSON
+//import org.apache.commons.codec.binary.Base64
 import org.codehaus.groovy.grails.web.json.JSONObject
 
 class AnnotatorService {
@@ -241,6 +242,9 @@ class AnnotatorService {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
         header.setContentType("text/plain");
         header.setType(JOSEObjectType.JWS)
+
+        // Used to debug issue with commons-codec library
+        //System.out.println(Base64.class.getProtectionDomain().getCodeSource().getLocation());
 
         // Create JWS object
         JWSObject jwsObject = new JWSObject(header, new Payload(jwtClaims.toJSONObject()));
