@@ -27,7 +27,8 @@ class AnnotatorController {
             archive: ['POST', 'PUT'],
             delete: ['POST', 'PUT', 'DELETE'],
             search: ['GET','POST'],
-            read: ['GET','POST']
+            read: ['GET','POST'],
+            random: ['GET']
         ]
 
     /**
@@ -112,7 +113,22 @@ class AnnotatorController {
             //response.status = 404
             render(status: 404, text: "Annotation not found!")
         }
+    }
 
+    /**
+     * GETs annotations. Server should return an array of annotations serialised as JSON or JSON-LD.
+     *
+     * @return
+     */
+    def random() {
+        def annotation = annotatorService.random()
+        if (annotation) {
+            render annotation.toJSONObject() as JSON
+        }
+        else {
+            response.status = 404
+            render(text: "Annotation not found!")
+        }
     }
 
     /**

@@ -19,6 +19,16 @@ class AnnotatorService {
 
     private static final String SHARED_KEY = "{shared key}";
 
+    def random() {
+        //return Annotation.executeQuery("from Annotation order by rand()", [max: 1])
+        //def annotations = Annotation.list() as List
+        def annotations = Annotation.executeQuery( "select a.id from Annotation a" );
+        def random = new Random()
+        def index = random.nextInt(annotations.size()-1)
+        def annotation = Annotation.get(annotations[index])
+        return annotation
+    }
+
     /**
      * Create an annotation using properties from the given the json object.
      *
