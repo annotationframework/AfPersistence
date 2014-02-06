@@ -1,6 +1,7 @@
 package org.mindinformatics.ann.framework.module.persistence
 
 import grails.converters.JSON
+import org.apache.commons.lang.builder.ReflectionToStringBuilder
 import org.codehaus.groovy.grails.web.json.JSONObject
 import org.mindinformatics.ann.framework.module.security.users.User
 
@@ -86,8 +87,13 @@ class Annotation {
         //}
 
         return jsonObject
-
     }
 
+
+    @Override
+    public String toString() {
+        final ReflectionToStringBuilder reflectionToStringBuilder = new ReflectionToStringBuilder(this);
+        return reflectionToStringBuilder.toString();
+    }
 
 }
