@@ -219,8 +219,6 @@ class AnnotatorController {
             def annotation = Annotation.get(params.id)
             render annotation.toJSONObject() as JSON
         }
-
-
     }
 
 

@@ -36,6 +36,8 @@ class AnnotatorService {
      * @return
      */
     def create(jsonObject) {
+        log.info "Create annotation: ${jsonObject}"
+
         def parent = jsonObject.parent ? Annotation.get(jsonObject.parent) : null
         def annotation = new Annotation(
             uri: jsonObject.uri,
@@ -52,8 +54,6 @@ class AnnotatorService {
         if (jsonObject.tags) {
             updateTags(annotation, jsonObject.tags)
         }
-
-
         annotation.save(failOnError: true)
         return annotation
     }
@@ -65,8 +65,8 @@ class AnnotatorService {
      * @return
      */
     def update(jsonObject) {
+        log.info "Update annotation: ${jsonObject}"
 
-        println "Update: ${jsonObject.id}"
         def annotation = Annotation.get(jsonObject.id)
         println "annotation: ${annotation}"
         if (annotation) {
@@ -91,6 +91,7 @@ class AnnotatorService {
     }
 
     def updateTags(annotation, tags) {
+        log.info("Updating annotation ${annotation} with tags ${tags}")
         // Associate all tags with the given
         if (tags) {
             annotation?.tags?.clear()
@@ -98,6 +99,7 @@ class AnnotatorService {
                 def tag = Tag.findByName(tagName)
                 if (!tag) {
                     tag = new Tag(name: tagName)
+                    tag.save(flush:true)
                 }
                 if (!annotation?.tags?.contains(tag)) {
                     annotation.addToTags(tag)
@@ -213,6 +215,8 @@ class AnnotatorService {
         def results = query.list([offset: params.offset, max: params.limit, sort:"dateCreated", order: "desc"])
         //results = results.reverse()
         def totalCount = query.list().size()
+
+        println "TOTAL COUNT " + totalCount
 
         return [annotations: results, totalCount: totalCount]
     }
