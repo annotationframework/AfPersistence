@@ -17,14 +17,37 @@ hibernate {
 environments {
     development {
         dataSource {
-            dbCreate = "create-drop" // one of 'create', 'create-drop', 'update', 'validate', ''
-            url = "jdbc:h2:mem:devDb;MVCC=TRUE"
+
+            //dbCreate = "create-drop" // one of 'create', 'create-drop', 'update', 'validate', ''
+            //url = "jdbc:h2:mem:devDb;MVCC=TRUE"
+
+            pooled = true
+            //dbCreate = "create-drop"
+            driverClassName = "com.mysql.jdbc.Driver"
+            dialect = org.hibernate.dialect.MySQL5InnoDBDialect
+            url = "jdbc:mysql://localhost:3306/catch?useUnicode=yes&characterEncoding=UTF-8&autoReconnect=true"
+            username = "catch"
+            password = "catch"
+
+
         }
+
+
     }
     test {
         dataSource {
-            dbCreate = "update"
-            url = "jdbc:h2:mem:testDb;MVCC=TRUE"
+            //dbCreate = "update"
+            //url = "jdbc:h2:mem:testDb;MVCC=TRUE"
+
+            pooled = true
+            //dbCreate = "create-drop"
+            driverClassName = "com.mysql.jdbc.Driver"
+            dialect = org.hibernate.dialect.MySQL5InnoDBDialect
+            url = "jdbc:mysql://localhost:3306/catch?useUnicode=yes&characterEncoding=UTF-8&autoReconnect=true"
+            username = "catch"
+            password = "catch"
+
+
         }
     }
     production {

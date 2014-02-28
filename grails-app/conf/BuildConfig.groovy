@@ -33,6 +33,7 @@ grails.project.dependency.resolution = {
     }
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
+        runtime 'mysql:mysql-connector-java:5.1.16'
 
         // runtime 'mysql:mysql-connector-java:5.1.5'
 		//compile "org.semweb4j:rdf2go.api:4.6.2"
@@ -66,7 +67,7 @@ grails.project.dependency.resolution = {
 	    compile ':spring-security-core:2.0-RC2'
 	    compile ":spring-security-openid:2.0-RC2"
         compile ":build-test-data:2.0.9"
-        compile (":functional-test:1.2.7") {
+        compile (":functional-test:2.0.RC1") {
             excludes "commons-codec"
         }
 
