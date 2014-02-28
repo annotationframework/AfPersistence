@@ -10,7 +10,6 @@ import grails.buildtestdata.mixin.Build
 import static org.junit.Assert.*
 import org.junit.*
 
-@TestMixin(GrailsUnitTestMixin)
 @TestFor(AnnotatorController)
 @Mock([Annotation,Tag])
 @Build([Annotation])
@@ -129,9 +128,44 @@ class AnnotatorControllerIntegrationTests {
         // Now check the annotation to make sure only one tag was created
         def annotation = Annotation.get(controller.response.json.id)
         assert annotation != null
-        assert annotation.tags.size() == 3 // FIXME The create method does what it's supposed to do, but the unit test framework doesn't support what I'm trying to do
-
+        assert annotation.tags.size() == 1
     }
+
+
+    @Test
+    void create_shouldAddExistingTagToNewAnnotation() {
+        //def json = '{"tags":["existing tag one"],"text":"asfsafsafasf","ranges":[{"start":"/div[1]/p[1]","startOffset":244,"end":"/div[1]/p[2]","endOffset":27}],"quote":"qui. Idque graeco scaevola duo in, vix mazim admodum suscipiantur ad. No cum cetero mena","uri":"http://afdemo.aws.af.cm/annotation/index"}'
+
+        def json1 = '{"permissions":{"read":[],"update":["Beta930@gmail.com"],"delete":["Beta930@gmail.com"],"admin":["Beta930@gmail.com"]},"user":{"id":"Beta930@gmail.com","name":"TriBob"},"ranges":[{"start":"/annotatable[1]/p[5]/font[1]","startOffset":31,"end":"/annotatable[1]/p[5]/font[1]","endOffset":46}],"quote":"lean and loafe","text":"<p>a \'la-la\' effect</p>","tags":["alliteration"],"media":"text","updated":"2014-02-28T20:23:40.603Z","created":"2014-02-28T20:23:40.603Z","parent":"0","uri":"https://courses.edx.org/courses/HarvardX/AI12.2x/2013_SOND/courseware/aa61c36baed647aebf3765ba669e8365/e236ebbd193d48279e669680789ad541/","citation":"None"}'
+        controller.request.method = "POST"
+        controller.request.contentType = "text/json"
+        controller.request.content = json1.getBytes()
+        controller.create();
+        println controller.response.json
+        println controller.response.status
+
+        assertEquals 200, controller.response.status
+        assertNotNull controller.response.json
+
+
+        def json2 = '{"permissions":{"read":[],"update":["Beta930@gmail.com"],"delete":["Beta930@gmail.com"],"admin":["Beta930@gmail.com"]},"user":{"id":"Beta930@gmail.com","name":"TriBob"},"ranges":[{"start":"/annotatable[1]/p[5]/font[1]","startOffset":31,"end":"/annotatable[1]/p[5]/font[1]","endOffset":46}],"quote":"lean and loafe","text":"<p>a \'la-la\' effect</p>","tags":["alliteration"],"media":"text","updated":"2014-02-28T20:23:40.603Z","created":"2014-02-28T20:23:40.603Z","parent":"0","uri":"https://courses.edx.org/courses/HarvardX/AI12.2x/2013_SOND/courseware/aa61c36baed647aebf3765ba669e8365/e236ebbd193d48279e669680789ad541/","citation":"None"}'
+        controller.request.method = "POST"
+        controller.request.contentType = "text/json"
+        controller.request.content = json2.getBytes()
+        controller.create();
+        println controller.response.json
+        println controller.response.status
+
+        assertEquals 200, controller.response.status
+        assertNotNull controller.response.json
+
+        // Now check the annotation to make sure only one tag was created
+        def annotation = Annotation.get(controller.response.json.id)
+        assert annotation != null
+        //assert annotation.tags.size() == 1
+    }
+
+
 
 
 
