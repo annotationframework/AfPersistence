@@ -32,7 +32,7 @@ class Annotation {
     static hasMany = [tags : Tag]
 
     static constraints = {
-        uri(nullable: false)
+        uri(nullable: false, size: 1..2048)
         media(nullable: true)
         text(nullable: true)
         quote(nullable: true)
@@ -47,7 +47,7 @@ class Annotation {
     }
 
     static mapping = {
-        uri sqlType:"text"
+        //uri sqlType:"text"
         json sqlType:"text"
         text sqlType:"text"
         quote sqlType:"text"

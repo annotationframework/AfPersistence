@@ -17,6 +17,9 @@ import org.codehaus.groovy.grails.web.json.JSONObject
 
 class AnnotatorService {
 
+    def sessionFactory
+    def propertyInstanceMap = org.codehaus.groovy.grails.plugins.DomainClassGrailsPlugin.PROPERTY_INSTANCE_MAP
+
     private static final String SHARED_KEY = "{shared key}";
 
     def random() {
@@ -91,16 +94,21 @@ class AnnotatorService {
     }
 
     def updateTags(annotation, tags) {
-        log.info("Updating annotation ${annotation} with tags ${tags}")
-        // Associate all tags with the given
+        //log.info("Updating annotation ${annotation} with tags ${tags}")
         if (tags) {
+            // Fixes lazy initialization issue when refreshing annotations
+            if (!annotation.isAttached()) {
+                annotation.attach()
+            }
             annotation?.tags?.clear()
             tags.each { tagName ->
+                // Only create a single tag with the same name.
                 def tag = Tag.findByName(tagName)
                 if (!tag) {
                     tag = new Tag(name: tagName)
                     tag.save(flush:true)
                 }
+                // Add tag to the annotation if it doesn't already exist
                 if (!annotation?.tags?.contains(tag)) {
                     annotation.addToTags(tag)
                 }
@@ -329,6 +337,34 @@ class AnnotatorService {
         return jwsObject.getPayload()
     }
      */
+
+    def cleanUpGorm() {
+        def session = sessionFactory.currentSession
+        session.flush()
+        session.clear()
+        propertyInstanceMap.get().clear()
+    }
+
+    def refreshAnnotations(params) {
+        def startTime = System.currentTimeMillis()
+        log.info  '>> Refresh annotation tags for all annotations'
+        def count = 0
+        def annotations = Annotation.list(params)
+        // Call collect in order to avoid ConcurrentModificationException
+        annotations.collect().each { annotation ->
+            if(annotation.json) {
+                def jsonObject = JSON.parse(annotation.json)
+                if (jsonObject.tags) {
+                    //log.info "Updating tags ${jsonObject.tags} for annotation ${annotation.id}"
+                    updateTags(annotation, jsonObject.tags)
+                    count++
+                }
+                if (count % 100 == 0) cleanUpGorm()
+            }
+        }
+        println "Refreshed ${count} out of ${annotations.size()} annotations: " + (System.currentTimeMillis() - startTime) + " ms"
+        return count;
+    }
 
 
 }
