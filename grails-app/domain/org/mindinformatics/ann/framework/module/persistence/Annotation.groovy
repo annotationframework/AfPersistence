@@ -67,6 +67,7 @@ class Annotation {
      * @return
      */
     JSONObject toJSONObject() {
+        println "toJSONObject()"
         if (!json) {
             throw new RuntimeException("Cannot convert to JSON - object is empty")
         }
@@ -92,6 +93,7 @@ class Annotation {
 
     @Override
     public String toString() {
+        println "toString()"
         final ReflectionToStringBuilder reflectionToStringBuilder = new ReflectionToStringBuilder(this);
         return reflectionToStringBuilder.toString();
     }

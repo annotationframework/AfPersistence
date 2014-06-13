@@ -41,18 +41,28 @@ class AnnotatorService {
     def create(jsonObject) {
         log.info "Create annotation: ${jsonObject}"
 
+        println "User: " + jsonObject?.user?.class
+
         def parent = jsonObject.parent ? Annotation.get(jsonObject.parent) : null
-        def annotation = new Annotation(
-            uri: jsonObject.uri,
-            json: jsonObject.toString(),
-            text: jsonObject.text,
-            quote: jsonObject.quote,
-            media: jsonObject?.media,
-            source: jsonObject?.target?.src,
-            userid:  jsonObject?.user?.id,
-            username: jsonObject?.user?.name,
-            parent: parent
-        )
+        def annotation = new Annotation()
+        annotation.uri = jsonObject.uri
+        annotation.text = jsonObject.text
+        annotation.quote = jsonObject.quote
+        annotation.media = jsonObject?.media
+        annotation.source = jsonObject?.target?.src
+        // Added
+        if (jsonObject?.user instanceof String) {
+            annotation.userid = jsonObject?.user
+            annotation.username = jsonObject?.user
+        }
+        else {
+            annotation.userid = jsonObject?.user?.id
+            annotation.username = jsonObject?.user?.name
+        }
+        annotation.json = jsonObject.toString()
+        annotation.parent = parent
+        // FIXME As a workaround we need to save the annotation before we can add tags to it
+        annotation.save(flush:true)
         println "Adding tags " + jsonObject.tags
         if (jsonObject.tags) {
             updateTags(annotation, jsonObject.tags)
@@ -359,10 +369,13 @@ class AnnotatorService {
                     updateTags(annotation, jsonObject.tags)
                     count++
                 }
-                if (count % 100 == 0) cleanUpGorm()
+                if (count % 100 == 0) {
+                    log.info "Refreshed ${count} of ${annotations?.size()?:0} annotations: " + (System.currentTimeMillis() - startTime) + " ms"
+                    cleanUpGorm()
+                }
             }
         }
-        println "Refreshed ${count} out of ${annotations.size()} annotations: " + (System.currentTimeMillis() - startTime) + " ms"
+        log.info "Refreshed ${count} of ${annotations.size()} annotations: " + (System.currentTimeMillis() - startTime) + " ms"
         return count;
     }
 

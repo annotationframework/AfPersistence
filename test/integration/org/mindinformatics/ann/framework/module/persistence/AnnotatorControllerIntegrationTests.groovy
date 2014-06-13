@@ -131,12 +131,50 @@ class AnnotatorControllerIntegrationTests {
         assert annotation.tags.size() == 1
     }
 
+    @Test
+    void create_shouldHandleUserAsString() {
+        //def json = '{"tags":["existing tag one"],"text":"asfsafsafasf","ranges":[{"start":"/div[1]/p[1]","startOffset":244,"end":"/div[1]/p[2]","endOffset":27}],"quote":"qui. Idque graeco scaevola duo in, vix mazim admodum suscipiantur ad. No cum cetero mena","uri":"http://afdemo.aws.af.cm/annotation/index"}'
+        def json1 = '{"permissions":{"read":[],"update":["jmiranda@example.com"],"delete":["jmiranda@example.com"],"admin":["jmiranda@example.com"]},"user":"jmiranda","ranges":[{"start":"/annotatable[1]/p[5]/font[1]","startOffset":31,"end":"/annotatable[1]/p[5]/font[1]","endOffset":46}],"quote":"lean and loafe","text":"<p>a \'la-la\' effect</p>","tags":["alliteration"],"media":"text","updated":"2014-02-28T20:23:40.603Z","created":"2014-02-28T20:23:40.603Z","parent":"0","uri":"https://courses.edx.org/courses/HarvardX/AI12.2x/2013_SOND/courseware/aa61c36baed647aebf3765ba669e8365/e236ebbd193d48279e669680789ad541/","citation":"None"}'
+        controller.request.method = "POST"
+        controller.request.contentType = "text/json"
+        controller.request.content = json1.getBytes()
+        controller.create();
+        println controller.response.json
+        println controller.response.status
+
+        assertEquals 200, controller.response.status
+        assertNotNull controller.response.json
+
+        def annotation = Annotation.get(controller.response.json.id)
+        assert annotation.userid == "jmiranda"
+        assert annotation.username == "jmiranda"
+
+    }
+
+    @Test
+    void create_shouldHandleUserAsObject() {
+        //def json = '{"tags":["existing tag one"],"text":"asfsafsafasf","ranges":[{"start":"/div[1]/p[1]","startOffset":244,"end":"/div[1]/p[2]","endOffset":27}],"quote":"qui. Idque graeco scaevola duo in, vix mazim admodum suscipiantur ad. No cum cetero mena","uri":"http://afdemo.aws.af.cm/annotation/index"}'
+        def json1 = '{"permissions":{"read":[],"update":["jmiranda@example.com"],"delete":["jmiranda@example.com"],"admin":["jmiranda@example.com"]},"user":{"id":"jmiranda@example.com","name":"jmiranda"},"ranges":[{"start":"/annotatable[1]/p[5]/font[1]","startOffset":31,"end":"/annotatable[1]/p[5]/font[1]","endOffset":46}],"quote":"lean and loafe","text":"<p>a \'la-la\' effect</p>","tags":["alliteration"],"media":"text","updated":"2014-02-28T20:23:40.603Z","created":"2014-02-28T20:23:40.603Z","parent":"0","uri":"https://courses.edx.org/courses/HarvardX/AI12.2x/2013_SOND/courseware/aa61c36baed647aebf3765ba669e8365/e236ebbd193d48279e669680789ad541/","citation":"None"}'
+        controller.request.method = "POST"
+        controller.request.contentType = "text/json"
+        controller.request.content = json1.getBytes()
+        controller.create();
+        println controller.response.json
+        println controller.response.status
+
+        assertEquals 200, controller.response.status
+        assertNotNull controller.response.json
+
+        def annotation = Annotation.get(controller.response.json.id)
+        assert annotation.userid == "jmiranda@example.com"
+        assert annotation.username == "jmiranda"
+
+    }
 
     @Test
     void create_shouldAddExistingTagToNewAnnotation() {
         //def json = '{"tags":["existing tag one"],"text":"asfsafsafasf","ranges":[{"start":"/div[1]/p[1]","startOffset":244,"end":"/div[1]/p[2]","endOffset":27}],"quote":"qui. Idque graeco scaevola duo in, vix mazim admodum suscipiantur ad. No cum cetero mena","uri":"http://afdemo.aws.af.cm/annotation/index"}'
-
-        def json1 = '{"permissions":{"read":[],"update":["Beta930@gmail.com"],"delete":["Beta930@gmail.com"],"admin":["Beta930@gmail.com"]},"user":{"id":"Beta930@gmail.com","name":"TriBob"},"ranges":[{"start":"/annotatable[1]/p[5]/font[1]","startOffset":31,"end":"/annotatable[1]/p[5]/font[1]","endOffset":46}],"quote":"lean and loafe","text":"<p>a \'la-la\' effect</p>","tags":["alliteration"],"media":"text","updated":"2014-02-28T20:23:40.603Z","created":"2014-02-28T20:23:40.603Z","parent":"0","uri":"https://courses.edx.org/courses/HarvardX/AI12.2x/2013_SOND/courseware/aa61c36baed647aebf3765ba669e8365/e236ebbd193d48279e669680789ad541/","citation":"None"}'
+        def json1 = '{"permissions":{"read":[],"update":["jmiranda@example.com"],"delete":["jmiranda@example.com"],"admin":["jmiranda@example.com"]},"user":{"id":"jmiranda@example.com","name":"jmiranda"},"ranges":[{"start":"/annotatable[1]/p[5]/font[1]","startOffset":31,"end":"/annotatable[1]/p[5]/font[1]","endOffset":46}],"quote":"lean and loafe","text":"<p>a \'la-la\' effect</p>","tags":["alliteration"],"media":"text","updated":"2014-02-28T20:23:40.603Z","created":"2014-02-28T20:23:40.603Z","parent":"0","uri":"https://courses.edx.org/courses/HarvardX/AI12.2x/2013_SOND/courseware/aa61c36baed647aebf3765ba669e8365/e236ebbd193d48279e669680789ad541/","citation":"None"}'
         controller.request.method = "POST"
         controller.request.contentType = "text/json"
         controller.request.content = json1.getBytes()
@@ -202,6 +240,51 @@ class AnnotatorControllerIntegrationTests {
     }
 
 
+    @Test
+    void update_shouldHandleUserAsString() {
+        //def json = '{"tags":["existing tag one"],"text":"asfsafsafasf","ranges":[{"start":"/div[1]/p[1]","startOffset":244,"end":"/div[1]/p[2]","endOffset":27}],"quote":"qui. Idque graeco scaevola duo in, vix mazim admodum suscipiantur ad. No cum cetero mena","uri":"http://afdemo.aws.af.cm/annotation/index"}'
+        def json = '{"id":2, "permissions":{"read":[],"update":["jmiranda@example.com"],"delete":["jmiranda@example.com"],"admin":["jmiranda@example.com"]},"user":"jmiranda@example.com","ranges":[{"start":"/annotatable[1]/p[5]/font[1]","startOffset":31,"end":"/annotatable[1]/p[5]/font[1]","endOffset":46}],"quote":"lean and loafe","text":"<p>a \'la-la\' effect</p>","tags":["alliteration"],"media":"text","updated":"2014-02-28T20:23:40.603Z","created":"2014-02-28T20:23:40.603Z","parent":"0","uri":"https://courses.edx.org/courses/HarvardX/AI12.2x/2013_SOND/courseware/aa61c36baed647aebf3765ba669e8365/e236ebbd193d48279e669680789ad541/","citation":"None"}'
+        Annotation.build(id:2, userid: "someone", username: "someone", json: json)
+
+        controller.request.method = "POST"
+        controller.request.contentType = "text/json"
+        controller.request.content = json.getBytes()
+        controller.create();
+        println controller.response.json
+        println controller.response.status
+
+        assertEquals 200, controller.response.status
+        assertNotNull controller.response.json
+
+        def annotation = Annotation.get(controller.response.json.id)
+        assert annotation.userid == "jmiranda@example.com"
+        assert annotation.username == "jmiranda@example.com"
+
+    }
+
+    @Test
+    void update_shouldHandleUserAsObject() {
+        //def json = '{"tags":["existing tag one"],"text":"asfsafsafasf","ranges":[{"start":"/div[1]/p[1]","startOffset":244,"end":"/div[1]/p[2]","endOffset":27}],"quote":"qui. Idque graeco scaevola duo in, vix mazim admodum suscipiantur ad. No cum cetero mena","uri":"http://afdemo.aws.af.cm/annotation/index"}'
+        def json = '{"id":2, "permissions":{"read":[],"update":["jmiranda@example.com"],"delete":["jmiranda@example.com"],"admin":["jmiranda@example.com"]},"user":{"id":"jmiranda@example.com","name":"jmiranda"},"ranges":[{"start":"/annotatable[1]/p[5]/font[1]","startOffset":31,"end":"/annotatable[1]/p[5]/font[1]","endOffset":46}],"quote":"lean and loafe","text":"<p>a \'la-la\' effect</p>","tags":["alliteration"],"media":"text","updated":"2014-02-28T20:23:40.603Z","created":"2014-02-28T20:23:40.603Z","parent":"0","uri":"https://courses.edx.org/courses/HarvardX/AI12.2x/2013_SOND/courseware/aa61c36baed647aebf3765ba669e8365/e236ebbd193d48279e669680789ad541/","citation":"None"}'
+        Annotation.build(id:2, userid: "someone", username: "someone", json: json)
+
+        controller.request.method = "POST"
+        controller.request.contentType = "text/json"
+        controller.request.content = json.getBytes()
+        controller.create();
+        println controller.response.json
+        println controller.response.status
+
+        assertEquals 200, controller.response.status
+        assertNotNull controller.response.json
+
+        def annotation = Annotation.get(controller.response.json.id)
+        assert annotation.userid == "jmiranda@example.com"
+        assert annotation.username == "jmiranda"
+
+    }
+
+
 
 
     @Test
@@ -210,7 +293,7 @@ class AnnotatorControllerIntegrationTests {
         controller.request.method = "POST"
         controller.request.contentType = "text/json"
 
-        // valid content, but the annotation doesn't exist
+        // valid content, but the annotationS doesn't exist
         controller.params.id = 100
         controller.request.content = '{"id":100,"tags":[],"text":"asf aggdsgds","created":"2013-12-01T01:02:34.0+0000","updated":"2013-12-01T01:02:34.0+0000","quote":"erroribus","ranges":[{"start":"/div[1]/p[1]","startOffset":140,"end":"/div[1]/p[1]","endOffset":149}],"uri":"http://afdemo.aws.af.cm/annotation/index"}'.getBytes()
         controller.update()
