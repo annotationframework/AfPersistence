@@ -205,7 +205,7 @@ class AnnotatorService {
         println "Search with params: " + params
         def query = Annotation.where {
             ((deleted == false || deleted == null) && (archived == false || archived == null))
-            if (params.uri) uri =~ params.uri + "%"
+            if (params.uri) uri == params.uri
             if (params.media) media == params.media
             if (params.quote) quote =~ "%" + params.quote + "%"
             if (params.text) text =~ "%" + params.text + "%"
