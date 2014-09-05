@@ -17,15 +17,18 @@ class Tag {
 
     static constraints = {
         name(blank:false, unique: true)
+        annotations(display:false)
     }
 
     @Override
     public String toString() {
-        final ReflectionToStringBuilder reflectionToStringBuilder = new ReflectionToStringBuilder(this);
+
+        return "${id}:${name}"
+        //final ReflectionToStringBuilder reflectionToStringBuilder = new ReflectionToStringBuilder(this);
         //reflectionToStringBuilder.setAppendStatics(true);
         //reflectionToStringBuilder.setAppendTransients(true);
         //reflectionToStringBuilder.setExcludeFieldNames(["contentStreamLength", "password"]);
-        return reflectionToStringBuilder.toString();
+        //return reflectionToStringBuilder.toString();
 
     }
 

@@ -43,7 +43,8 @@ class Annotation {
         json(nullable: false)
         deleted(nullable: true)
         archived(nullable: true)
-        parent(nullable:true)
+        parent(nullable:true,display:false,editable:false)
+        tags(display:false,editable:false)
     }
 
     static mapping = {
@@ -93,9 +94,10 @@ class Annotation {
 
     @Override
     public String toString() {
-        println "toString()"
-        final ReflectionToStringBuilder reflectionToStringBuilder = new ReflectionToStringBuilder(this);
-        return reflectionToStringBuilder.toString();
+        return "${id}:${uri}:${source}:${text}:${quote}:${username}:${userid}"
+        //final ReflectionToStringBuilder reflectionToStringBuilder = new ReflectionToStringBuilder(this);
+        //println "toString() " + reflectionToStringBuilder.toString()
+        //return reflectionToStringBuilder.toString();
     }
 
 }

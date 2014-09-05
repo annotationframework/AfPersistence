@@ -12,7 +12,7 @@ import org.junit.*
 
 @TestFor(AnnotatorController)
 @Mock([Annotation,Tag])
-@Build([Annotation])
+@Build([Annotation,Tag])
 class AnnotatorControllerIntegrationTests {
 
     @Before
@@ -110,6 +110,50 @@ class AnnotatorControllerIntegrationTests {
         assert annotation.json != null
         assert annotation.tags.size() == 3
     }
+
+    @Test
+    void createUpdate_shouldNotThrowOutOfMemoryError() {
+
+        def json = '{"tags":["longs"],"citation":"Wu, Jingzi, 1701-1754. The Scholars. [Translated by Yang Hsien-yi and Gladys Yang. Author\'s port. and illus. by Cheng Shih-fa] Peking, Foreign Languages Press, 1957. Pages 49-51","text":"","created":"2014-06-29T07:25:07.498Z","updated":"2014-06-29T07:25:07.498Z","quote":"Xia","ranges":[{"endOffset":346,"start":"/textannotation[1]/p[10]","end":"/textannotation[1]/p[10]","startOffset":343}],"permissions":{"update":["micazorla@yahoo.es"],"admin":["micazorla@yahoo.es"],"delete":["micazorla@yahoo.es"],"read":[]},"parent":"0","uri":"https://courses.edx.org/courses/HarvardX/SW12.6x/2T2014/courseware/f9ec9c0c7bb8498d814684358b6e8b0f/0134825cf0f34fd68516ff4018d3ead4/1","media":"text","user":{"id":"micazorla@yahoo.es","name":"Mila1969"}}'
+        def tag = Tag.build(name: "longs")
+        def annotation = Annotation.build(id:3, json: json)
+        annotation.addToTags(tag)
+        annotation.save(flush:true, failOnError:true)
+
+
+        controller.request.method = "POST"
+        controller.request.contentType = "text/json"
+        controller.request.content = json.getBytes()
+        controller.create();
+        println controller.response.json
+        println controller.response.status
+
+        assertEquals 200, controller.response.status
+        assertNotNull controller.response.json
+
+        // Now check the annotation to make sure all fields were created
+        annotation = Annotation.get(controller.response.json.id)
+        assert annotation != null
+        assert annotation.id == controller.response.json.id
+//        assert annotation.text == "asfsafsafasf"
+//        assert annotation.quote == "qui. Idque graeco scaevola duo in, vix mazim admodum suscipiantur ad. No cum cetero mena"
+//        assert annotation.uri == "http://afdemo.aws.af.cm/annotation/index"
+        assert annotation.json != null
+        assert annotation.tags.size() == 1
+
+
+        def json2 = '{"id":3,"tags":["longs"],"citation":"Wu, Jingzi, 1701-1754. The Scholars. [Translated by Yang Hsien-yi and Gladys Yang. Author\'s port. and illus. by Cheng Shih-fa] Peking, Foreign Languages Press, 1957. Pages 49-51","text":"","created":"2014-06-29T07:25:07.498Z","updated":"2014-06-29T07:25:07.498Z","quote":"Xia","ranges":[{"endOffset":346,"start":"/textannotation[1]/p[10]","end":"/textannotation[1]/p[10]","startOffset":343}],"permissions":{"update":["micazorla@yahoo.es"],"admin":["micazorla@yahoo.es"],"delete":["micazorla@yahoo.es"],"read":[]},"parent":"0","uri":"https://courses.edx.org/courses/HarvardX/SW12.6x/2T2014/courseware/f9ec9c0c7bb8498d814684358b6e8b0f/0134825cf0f34fd68516ff4018d3ead4/1","media":"text","user":{"id":"micazorla@yahoo.es","name":"Mila1969"}}'
+        controller.request.method = "POST"
+        controller.request.contentType = "text/json"
+        controller.request.content = json2.getBytes()
+        controller.update();
+        annotation = Annotation.get(3)
+        assert annotation != null
+        assert annotation.id == 3
+
+    }
+
+
 
     @Test
     void create_shouldNotAddDuplicateTags() {
@@ -501,7 +545,8 @@ class AnnotatorControllerIntegrationTests {
         assert controller.response.json.rows.size() == 1
     }
 
-    @Test
+    // Removed wildcard
+    @Ignore
     void searchByUriUsingWildcard() {
         controller.request.method = "GET"
         controller.request.contentType = "text/json"

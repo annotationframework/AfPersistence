@@ -100,6 +100,23 @@ class AnnotationTests {
 
         annotation1.tags.size() == 2
         annotation2.tags.size() == 1
+    }
+
+
+    @Test
+    void toString_shouldNotThrowOutOfMemoryError() {
+        def json1 = '''{"tags":["tag1"],"citation":"Peter Bol and Yu Wen","text":"<p>&nbsp;</p>\n<p class=\"p1\">The <em>Spring and Autumn Annals</em> is the official chronicle of the State of Lu from 722 BCE to 481 BCE and was said to have been edited by Confucius. The original text of this chronicle is very concise,and some early commentators tried to decipher Confucius&rsquo;s judgment from his choice of words. However, The <em>Zuo Commentary</em>, composed around the early 4th century, took a different approach and gave lengthy accounts of the events which the <em>Annals</em> referred to.</p>","totalComments":2,"ranges":[{"endOffset":24,"start":"/textannotation[1]/p[20]/i[1]","end":"/textannotation[1]/p[20]/i[2]","startOffset":0}],"parent":"0","deleted":false,"uri":"https://courses.edx.org/courses/HarvardX/SW12.6x/2T2014/courseware/f9ec9c0c7bb8498d814684358b6e8b0f/ddccd8c979604535992e240d673467cd/6","id":34597,"archived":false,"created":"2014-06-13T02:12:17.0+0000","updated":"2014-06-13T10:06:45.0+0000","quote":"The Zuo Commentary on Spring and Autumn Annals","permissions":{"update":["chinaxharvard@gmail.com"],"admin":["chinaxharvard@gmail.com"],"delete":["chinaxharvard@gmail.com"],"read":[]},"user":{"id":"chinaxharvard@gmail.com","name":"ChinaX_Staff"},"media":"text"}'''
+
+        //def json2 = '{"tags":["longs"],"citation":"Wu, Jingzi, 1701-1754. The Scholars. [Translated by Yang Hsien-yi and Gladys Yang. Author\'s port. and illus. by Cheng Shih-fa] Peking, Foreign Languages Press, 1957. Pages 49-51","text":"","created":"2014-06-29T07:25:07.498Z","updated":"2014-06-29T07:25:07.498Z","quote":"Xia","ranges":[{"endOffset":346,"start":"/textannotation[1]/p[10]","end":"/textannotation[1]/p[10]","startOffset":343}],"permissions":{"update":["micazorla@yahoo.es"],"admin":["micazorla@yahoo.es"],"delete":["micazorla@yahoo.es"],"read":[]},"parent":"0","uri":"https://courses.edx.org/courses/HarvardX/SW12.6x/2T2014/courseware/f9ec9c0c7bb8498d814684358b6e8b0f/0134825cf0f34fd68516ff4018d3ead4/1","media":"text","user":{"id":"micazorla@yahoo.es","name":"Mila1969"}}'
+
+        //def annotation1 = new Annotation(text:"my comment 6", quote:"quote6",uri:"http://afdemo.aws.af.cm/annotation/index",media:"text",source:"source6")
+
+
+        annotation1.userid = "justin.miranda@gmail.com"
+        annotation1.json = json1
+        annotation1.addToTags(name: "tag1")
+        annotation1.save(failOnError:true)
+        assertNotNull annotation1.toString()
 
 
 
