@@ -25,10 +25,10 @@ grails.project.dependency.resolution = {
         //mavenRepo "http://repository.codehaus.org"
         //mavenRepo "http://download.java.net/maven/2/"
         //mavenRepo "http://repository.jboss.com/maven2/"
-		mavenRepo "http://repo.aduna-software.org/maven2/releases/"
 		mavenRepo "http://repo1.maven.org/maven2/"
-        mavenRepo "http://semweb4j.org/repo/"
-		//mavenRepo "https://repository.jboss.org/nexus/content/repositories/thirdparty-releases"
+        mavenRepo "http://mavenrepo.fzi.de/semweb4j.org/repo/"
+        //mavenRepo "http://repo.aduna-software.org/maven2/releases/"
+        //mavenRepo "https://repository.jboss.org/nexus/content/repositories/thirdparty-releases"
 		
     }
     dependencies {
@@ -40,8 +40,10 @@ grails.project.dependency.resolution = {
 
         //compile 'commons-codec:commons-codec:1.5'
 		compile ("org.apache.marmotta:sesame-tools-rio-jsonld:3.0.0-incubating")
-        compile ("org.semweb4j:rdf2go.impl.sesame:4.8.2")
-        compile ("org.semweb4j:rdf2go.api:4.8.2")
+        compile ("org.semweb4j:rdf2go.api:4.8.3")
+        compile ("org.semweb4j:rdf2go.impl.sesame:4.8.3") {
+            //excludes "sesame-runtime-osgi"
+        }
         compile ("com.nimbusds:nimbus-jose-jwt:2.20")
         //compile ("com.googlecode.jsontoken:jsontoken:1.0")
 
