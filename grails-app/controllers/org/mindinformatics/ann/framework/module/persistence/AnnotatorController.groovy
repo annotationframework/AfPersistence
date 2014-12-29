@@ -52,9 +52,28 @@ class AnnotatorController {
      * See https://github.com/okfn/annotator/wiki/Authentication
      *
      * @return
+
+    def token(String apiKey, String username) {
+        render(status: 200, text: annotatorService.getToken(username, apiKey, 86400))
+    }
      */
-    def token() {
-        render(status: 200, text: annotatorService.getToken("jmiranda", "openannotation", 86400))
+
+    /**
+     * Generates a token to be used to communicate with the annotator store.
+     *
+     * See https://github.com/okfn/annotator/wiki/Authentication
+     *
+     * @param apiKey
+     * @param username
+     * @param ttl
+     * @return
+     */
+    def token(String apiKey, String username, Integer ttl) {
+        if (!apiKey || !username) {
+            throw new IllegalArgumentException("API client must specify apiKey and username as request parameters")
+        }
+
+        render(status: 200, text: annotatorService.getToken(username, apiKey, ttl))
     }
 
     /**

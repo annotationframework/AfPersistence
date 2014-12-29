@@ -68,9 +68,8 @@ class Annotation {
      * @return
      */
     JSONObject toJSONObject() {
-        println "toJSONObject()"
         if (!json) {
-            throw new RuntimeException("Cannot convert to JSON - object is empty")
+            throw new RuntimeException("Cannot convert to JSON Object as JSON string is null")
         }
 
         def isoFormatter = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.SZ")
@@ -87,6 +86,7 @@ class Annotation {
         //    jsonObject.geolocation.latitude = 0.0
         //    jsonObject.geolocation.longitude = 0.0
         //}
+        log.info "Converting json=${json} to jsonObject=${jsonObject}"
 
         return jsonObject
     }

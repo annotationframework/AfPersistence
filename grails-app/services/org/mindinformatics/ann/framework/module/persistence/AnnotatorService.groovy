@@ -41,7 +41,7 @@ class AnnotatorService {
     def create(jsonObject) {
         log.info "Create annotation: ${jsonObject}"
 
-        println "User: " + jsonObject?.user?.class
+        log.info "User: " + jsonObject?.user?.class
 
         def parent = jsonObject.parent ? Annotation.get(jsonObject.parent) : null
         def annotation = new Annotation()
@@ -81,7 +81,7 @@ class AnnotatorService {
         log.info "Update annotation: ${jsonObject}"
 
         def annotation = Annotation.get(jsonObject.id)
-        println "annotation: ${annotation}"
+        log.info  "annotation: ${annotation}"
         if (annotation) {
             annotation.uri = jsonObject.uri
             annotation.json = jsonObject.toString()
@@ -202,7 +202,7 @@ class AnnotatorService {
      * @return a list of annotations that match the given parameters
      */
     def search(params) {
-        println "Search with params: " + params
+        log.info  "Search with params: " + params
         def query = Annotation.where {
             ((deleted == false || deleted == null) && (archived == false || archived == null))
             if (params.uri) uri == params.uri
@@ -234,7 +234,7 @@ class AnnotatorService {
         //results = results.reverse()
         def totalCount = query.list().size()
 
-        println "TOTAL COUNT " + totalCount
+        log.info  "TOTAL COUNT " + totalCount
 
         return [annotations: results, totalCount: totalCount]
     }
@@ -242,12 +242,14 @@ class AnnotatorService {
     /**
      * Generate a java web token.
      *
+     * See https://github.com/okfn/annotator/wiki/Authentication
+     *
      * @param userId
      * @param consumerKey
      * @param ttl
      * @return
      */
-    def getToken(userId, consumerKey, ttl) {
+    def getToken(String userId, String consumerKey, Integer ttl = 86400) {
         return getToken(userId, consumerKey, ttl, new Date())
     }
 
