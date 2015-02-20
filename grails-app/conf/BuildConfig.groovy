@@ -14,7 +14,7 @@ grails.project.dependency.resolution = {
         // excludes 'ehcache'
         excludes 'commons-codec'
     }
-    log "warn" // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
+    log "info" // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
     repositories {
         grailsCentral()
         // uncomment the below to enable remote dependency resolution
@@ -25,6 +25,7 @@ grails.project.dependency.resolution = {
         //mavenRepo "http://repository.codehaus.org"
         //mavenRepo "http://download.java.net/maven/2/"
         //mavenRepo "http://repository.jboss.com/maven2/"
+        mavenRepo "https://repo.grails.org/grails/plugins"
 		mavenRepo "http://repo1.maven.org/maven2/"
         mavenRepo "http://mavenrepo.fzi.de/semweb4j.org/repo/"
         //mavenRepo "http://repo.aduna-software.org/maven2/releases/"
@@ -40,10 +41,15 @@ grails.project.dependency.resolution = {
 
         //compile 'commons-codec:commons-codec:1.5'
 		compile ("org.apache.marmotta:sesame-tools-rio-jsonld:3.0.0-incubating")
-        compile ("org.semweb4j:rdf2go.api:4.8.3")
+
+        compile ("org.semweb4j:rdf2go.api:4.8.3") {
+            excludes 'slf4j-api'
+        }
         compile ("org.semweb4j:rdf2go.impl.sesame:4.8.3") {
+            excludes 'slf4j-api'
             //excludes "sesame-runtime-osgi"
         }
+
         compile ("com.nimbusds:nimbus-jose-jwt:2.20")
         //compile ("com.googlecode.jsontoken:jsontoken:1.0")
 
