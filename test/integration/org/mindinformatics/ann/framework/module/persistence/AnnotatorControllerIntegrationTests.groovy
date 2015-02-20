@@ -115,11 +115,8 @@ class AnnotatorControllerIntegrationTests {
     void createUpdate_shouldNotThrowOutOfMemoryError() {
 
         def json = '{"tags":["longs"],"citation":"Wu, Jingzi, 1701-1754. The Scholars. [Translated by Yang Hsien-yi and Gladys Yang. Author\'s port. and illus. by Cheng Shih-fa] Peking, Foreign Languages Press, 1957. Pages 49-51","text":"","created":"2014-06-29T07:25:07.498Z","updated":"2014-06-29T07:25:07.498Z","quote":"Xia","ranges":[{"endOffset":346,"start":"/textannotation[1]/p[10]","end":"/textannotation[1]/p[10]","startOffset":343}],"permissions":{"update":["micazorla@yahoo.es"],"admin":["micazorla@yahoo.es"],"delete":["micazorla@yahoo.es"],"read":[]},"parent":"0","uri":"https://courses.edx.org/courses/HarvardX/SW12.6x/2T2014/courseware/f9ec9c0c7bb8498d814684358b6e8b0f/0134825cf0f34fd68516ff4018d3ead4/1","media":"text","user":{"id":"micazorla@yahoo.es","name":"Mila1969"}}'
-        def tag = Tag.build(name: "longs")
         def annotation = Annotation.build(id:3, json: json)
-        annotation.addToTags(tag)
         annotation.save(flush:true, failOnError:true)
-
 
         controller.request.method = "POST"
         controller.request.contentType = "text/json"
@@ -153,6 +150,33 @@ class AnnotatorControllerIntegrationTests {
 
     }
 
+    @Test
+    void update_shouldUpdateAnnotation() {
+
+        // Create existing annotation
+        def json = '{"media":"image","tags":[],"text":"a small portrait","uri":"http://oculus-dev.harvardx.harvard.edu/manifests/drs:5981093/canvas/canvas-5981102.json","rangePosition":{"x":"2141","y":"1844","width":"846","height":"591"},"bounds":{"x":"0","y":"-1194","width":"4680","height":"7372"},"updated":"2015-02-19T18:34:07.020Z","created":"2015-02-19T18:34:07.020Z","user":{"id":"test@mirador.org","name":"mirador"},"permissions":{"read":[],"update":["test@mirador.org"],"delete":["test@mirador.org"],"admin":["test@mirador.org"]},"archived":false,"ranges":[],"parent":"0"}'
+        def annotation = Annotation.build(id:3, json: json)
+        annotation.save(flush:true, failOnError:true)
+
+        // POST update
+        controller.params.id = 3
+        controller.request.method = "POST"
+        controller.request.contentType = "text/json"
+
+        json = '{"media":"image","tags":[],"text":"a small portrait updated","uri":"http://oculus-dev.harvardx.harvard.edu/manifests/drs:5981093/canvas/canvas-5981102.json","rangePosition":{"x":"2141","y":"1844","width":"846","height":"591"},"bounds":{"x":"0","y":"-1194","width":"4680","height":"7372"},"updated":"2015-02-19T18:34:07.020Z","created":"2015-02-19T18:34:07.020Z","user":{"id":"test@mirador.org","name":"mirador"},"permissions":{"read":[],"update":["test@mirador.org"],"delete":["test@mirador.org"],"admin":["test@mirador.org"]},"archived":false,"ranges":[],"parent":"0"}'
+
+        controller.request.content = json.getBytes()
+        controller.update();
+        println controller.response.json
+        println controller.response.status
+
+        assertEquals 200, controller.response.status
+        assertNotNull controller.response.json
+
+        annotation = Annotation.get(3)
+        assertNotNull annotation
+        assertEquals "a small portrait updated", annotation.text
+    }
 
 
     @Test

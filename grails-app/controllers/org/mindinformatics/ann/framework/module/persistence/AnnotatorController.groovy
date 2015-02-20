@@ -184,6 +184,9 @@ class AnnotatorController {
      */
     def update() {
         def jsonObject = request.JSON
+        if (jsonObject) {
+            jsonObject.id = params.id
+        }
         def annotation = annotatorService.update(jsonObject)
         if (!annotation) {
             render(status: 404, text: "Annotation ${params.id} was not found!") as JSON
