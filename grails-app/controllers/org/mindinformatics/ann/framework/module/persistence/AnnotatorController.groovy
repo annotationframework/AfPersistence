@@ -69,11 +69,13 @@ class AnnotatorController {
      * @return
      */
     def token(String apiKey, String username, Integer ttl) {
+        log.info "Token: " + params
+
         if (!apiKey || !username) {
             throw new IllegalArgumentException("API client must specify apiKey and username as request parameters")
         }
 
-        render(status: 200, text: annotatorService.getToken(username, apiKey, ttl))
+        render(status: 200, text: annotatorService.getToken(apiKey, username, ttl))
     }
 
     /**

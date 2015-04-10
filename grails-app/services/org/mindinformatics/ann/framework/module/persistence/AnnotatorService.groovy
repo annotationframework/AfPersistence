@@ -14,6 +14,7 @@ import com.nimbusds.jwt.JWTClaimsSet
 import grails.converters.JSON
 //import org.apache.commons.codec.binary.Base64
 import org.codehaus.groovy.grails.web.json.JSONObject
+import org.mindinformatics.ann.framework.module.security.systems.SystemApi
 
 class AnnotatorService {
 
@@ -249,8 +250,8 @@ class AnnotatorService {
      * @param ttl
      * @return
      */
-    def getToken(String userId, String consumerKey, Integer ttl = 86400) {
-        return getToken(userId, consumerKey, ttl, new Date())
+    def getToken(String apiKey, String username, Integer ttl = 86400) {
+        return getToken(apiKey, username, ttl, new Date())
     }
 
 
@@ -259,14 +260,15 @@ class AnnotatorService {
      *
      * @return
      */
-    def getToken(userId, consumerKey, ttl, issuedAt) {
+    def getToken(String apiKey, String username, Integer ttl, Date issuedAt) {
+        log.info ("Get token username=" + username + "apiKey=" + apiKey + " ttl=" + ttl + ", issuedAt=" + issuedAt)
         // Given a user instance
         // Compose the JWT claims set
         JWTClaimsSet jwtClaims = new JWTClaimsSet();
         jwtClaims.setIssueTime(issuedAt);
         jwtClaims.setJWTID(UUID.randomUUID().toString());
-        jwtClaims.setCustomClaim("userId", userId);
-        jwtClaims.setCustomClaim("consumerKey", consumerKey);
+        jwtClaims.setCustomClaim("userId", username);
+        jwtClaims.setCustomClaim("consumerKey", apiKey);
         jwtClaims.setCustomClaim("ttl", ttl);
         jwtClaims.setCustomClaim("issuedAt", issuedAt.format("yyyy-MM-dd'T'hh:mm:ssZ")); // e.g. 2013-08-30T22:23:30+00:00
         // jwtClaims.setCustomClaim("email", user.email);
@@ -283,15 +285,26 @@ class AnnotatorService {
         // Create JWS object
         JWSObject jwsObject = new JWSObject(header, new Payload(jwtClaims.toJSONObject()));
 
-        // Create HMAC signer
+        SystemApi systemApi = SystemApi.findByApikey(apiKey);
+        if (!systemApi) {
+            log.info("System API key ${apiKey} does not exist")
+            throw new IllegalArgumentException("Unable to locate a registered consumer with API key '" + apiKey + "'." );
+        }
 
-        JWSSigner signer = new MACSigner(SHARED_KEY.getBytes());
+        // Check if system API is disabled
+        if (!systemApi.enabled) {
+            throw new IllegalArgumentException("System API with key " + apiKey + " is currently disabled. Please contact your system administrator.");
+        }
 
+        // Use API key as secret key for backwards compatibility
+        String secretKey = systemApi?.secretKey ?: systemApi?.apikey
         try {
+            // Create HMAC signer
+            JWSSigner signer = new MACSigner(secretKey?.getBytes());
             jwsObject.sign(signer);
         } catch(JOSEException e) {
             System.err.println("Error signing JWT: " + e.getMessage());
-            return;
+            throw new RuntimeException("Error signing JWT with API key and secret: " + e.message)
         }
 
         // Serialise to JWT compact form
@@ -303,13 +316,13 @@ class AnnotatorService {
      *
      * @param token
      * @return
-     */
     def verifyToken(token) {
         def jwsObject = JWSObject.parse(token);
         JWSVerifier verifier = new MACVerifier(SHARED_KEY.getBytes());
         println "Payload: ${jwsObject.payload}"
         return jwsObject.verify(verifier)
     }
+     */
 
     /**
      * Generate a token to be used by the annotator client.  Not used at the moment.

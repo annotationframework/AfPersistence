@@ -17,7 +17,7 @@ class AnnotatorServiceTests {
         def calendar = Calendar.getInstance()
         calendar.set(2013, 1, 1)
         def issuedAt = calendar.getTime()
-        def actualToken = service.getToken("jmiranda", "openannotation", 86400, issuedAt)
+        def actualToken = service.getToken("openannotation", "jmiranda", 86400, issuedAt)
         println actualToken
 
         assertTrue service.verifyToken(actualToken)
