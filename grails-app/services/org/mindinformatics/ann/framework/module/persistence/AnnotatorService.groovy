@@ -233,9 +233,7 @@ class AnnotatorService {
         // FIXME Don't like that I need to do execute two queries here
         def results = query.list([offset: params.offset, max: params.limit, sort:"dateCreated", order: "desc"])
         //results = results.reverse()
-        def totalCount = query.list().size()
-
-        log.info  "TOTAL COUNT " + totalCount
+        def totalCount = query.count();
 
         return [annotations: results, totalCount: totalCount]
     }
