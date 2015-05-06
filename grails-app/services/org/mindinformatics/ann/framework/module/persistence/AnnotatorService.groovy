@@ -259,7 +259,7 @@ class AnnotatorService {
      * @return
      */
     def getToken(String apiKey, String username, Integer ttl, Date issuedAt) {
-        log.info ("Get token username=" + username + "apiKey=" + apiKey + " ttl=" + ttl + ", issuedAt=" + issuedAt)
+        log.info ("Get token username=" + username + ", apiKey=" + apiKey + ", ttl=" + ttl + ", issuedAt=" + issuedAt)
         // Given a user instance
         // Compose the JWT claims set
         JWTClaimsSet jwtClaims = new JWTClaimsSet();
@@ -295,9 +295,9 @@ class AnnotatorService {
         }
 
         // Use API key as secret key for backwards compatibility
-        String secretKey = systemApi?.secretKey ?: systemApi?.apikey
         try {
             // Create HMAC signer
+            String secretKey = systemApi?.secretKey?:systemApi?.apikey
             JWSSigner signer = new MACSigner(secretKey?.getBytes());
             jwsObject.sign(signer);
         } catch(JOSEException e) {
