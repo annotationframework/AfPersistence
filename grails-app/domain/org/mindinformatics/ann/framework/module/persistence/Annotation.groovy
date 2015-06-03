@@ -84,7 +84,7 @@ class Annotation {
             throw new RuntimeException("Cannot convert to JSON Object as JSON string is null")
         }
 
-        def isoFormatter = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.SZ")
+        def isoFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss z")
         def jsonObject = JSON.parse(json)
         jsonObject.id = id
         jsonObject.updated = lastUpdated?isoFormatter.format(lastUpdated):null

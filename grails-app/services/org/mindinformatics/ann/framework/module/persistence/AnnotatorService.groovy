@@ -276,7 +276,7 @@ class AnnotatorService {
         jwtClaims.setCustomClaim("userId", username);
         jwtClaims.setCustomClaim("consumerKey", apiKey);
         jwtClaims.setCustomClaim("ttl", ttl);
-        jwtClaims.setCustomClaim("issuedAt", issuedAt.format("yyyy-MM-dd'T'hh:mm:ssZ")); // e.g. 2013-08-30T22:23:30+00:00
+        jwtClaims.setCustomClaim("issuedAt", issuedAt.format("yyyy-MM-dd'T'HH:mm:ss z")); // e.g. 2013-08-30T22:23:30+00:00
         // jwtClaims.setCustomClaim("email", user.email);
 
         // Create JWS header with HS256 algorithm
