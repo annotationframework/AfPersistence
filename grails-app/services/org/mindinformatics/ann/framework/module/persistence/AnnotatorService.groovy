@@ -51,6 +51,8 @@ class AnnotatorService {
         annotation.quote = jsonObject.quote
         annotation.media = jsonObject?.media
         annotation.source = jsonObject?.target?.src
+        annotation.collectionId = jsonObject.collectionId
+        annotation.contextId = jsonObject.contextId
         // Added
         if (jsonObject?.user instanceof String) {
             annotation.userid = jsonObject?.user
@@ -92,6 +94,9 @@ class AnnotatorService {
             if (jsonObject.target) annotation.source = jsonObject?.target?.src
             if (jsonObject.user) annotation.userid = jsonObject?.user?.id?:jsonObject?.user?.name
             if (jsonObject.quote) annotation.quote = jsonObject?.quote
+            if (jsonObject.collectionId) annotation.collectionId = jsonObject.collectionId
+            if (jsonObject.contextId) annotation.contextId = jsonObject.contextId
+
             if (jsonObject.parent) {
                 annotation.parent = Annotation.get(jsonObject.parent)
             }
