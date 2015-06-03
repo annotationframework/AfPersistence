@@ -213,6 +213,9 @@ class AnnotatorService {
             if (params.userid) userid == params.userid
             if (params.username) username == params.username
             if (params.source) source == params.source
+            if (params.contextId) contextId == params.contextId
+            if (params.collectionId) collectionId == params.collectionId
+
             if (params.dateCreatedOnOrAfter) {
                 dateCreated >= params.dateCreatedOnOrAfter
             }

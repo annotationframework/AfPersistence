@@ -17,6 +17,9 @@ class Annotation {
     String source
     String uri
 
+    String collectionId
+    String contextId
+
     // Associations
     Annotation parent
 
@@ -45,6 +48,8 @@ class Annotation {
         archived(nullable: true)
         parent(nullable:true,display:false,editable:false)
         tags(display:false,editable:false)
+        collectionId(nullable:true)
+        contextId(nullable:true)
     }
 
     static mapping = {
@@ -52,6 +57,9 @@ class Annotation {
         userid index: "annotation_idx"
         username index: "annotation_idx"
         media index: "annotation_idx"
+        source index: "annotation_idx"
+        collectionId index: "annotation_idx"
+        contextId index: "annotation_idx"
 
         json sqlType:"text"
         text sqlType:"text"
@@ -60,7 +68,6 @@ class Annotation {
     }
 
     def getComments() {
-        //return Annotation.findAllByParent(this)
         return Annotation.where {
             ((deleted == false || deleted == null) && (archived == false || archived == null))
             parent == this
@@ -85,14 +92,6 @@ class Annotation {
         jsonObject.totalComments = comments.size()
         jsonObject.archived = archived?:false
         jsonObject.deleted = deleted?:false
-
-        // Removed the obfuscation code
-        //if (jsonObject.geolocation) {
-        //    jsonObject.geolocation.latitude = 0.0
-        //    jsonObject.geolocation.longitude = 0.0
-        //}
-        log.info "Converting json=${json} to jsonObject=${jsonObject}"
-
         return jsonObject
     }
 
@@ -100,9 +99,6 @@ class Annotation {
     @Override
     public String toString() {
         return "${id}:${uri}:${source}:${text}:${quote}:${username}:${userid}"
-        //final ReflectionToStringBuilder reflectionToStringBuilder = new ReflectionToStringBuilder(this);
-        //println "toString() " + reflectionToStringBuilder.toString()
-        //return reflectionToStringBuilder.toString();
     }
 
 }
