@@ -48,10 +48,15 @@ class Annotation {
     }
 
     static mapping = {
-        //uri sqlType:"text"
+        uri index: "annotation_idx"
+        userid index: "annotation_idx"
+        username index: "annotation_idx"
+        media index: "annotation_idx"
+
         json sqlType:"text"
         text sqlType:"text"
         quote sqlType:"text"
+
     }
 
     def getComments() {
