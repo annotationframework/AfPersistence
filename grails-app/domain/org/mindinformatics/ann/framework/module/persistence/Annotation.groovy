@@ -53,13 +53,13 @@ class Annotation {
     }
 
     static mapping = {
-        uri index: "annotation_idx"
-        userid index: "annotation_idx"
-        username index: "annotation_idx"
-        media index: "annotation_idx"
-        source index: "annotation_idx"
-        collectionId index: "annotation_idx"
-        contextId index: "annotation_idx"
+        uri index: "annotation_uri_idx"
+        userid index: "annotation_user_idx"
+        username index: "annotation_user_idx"
+        media index: "annotation_media_idx"
+        source index: "annotation_source_idx"
+        collectionId index: "annotation_context_idx"
+        contextId index: "annotation_context_idx"
 
         json sqlType:"text"
         text sqlType:"text"
