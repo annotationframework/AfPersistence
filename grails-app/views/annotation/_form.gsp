@@ -34,6 +34,14 @@
 	<g:textField name="userid" value="${annotationInstance?.userid}"/>
 </div>
 
+<div class="fieldcontain ${hasErrors(bean: annotationInstance, field: 'uri', 'error')} ">
+	<label for="uri">
+		<g:message code="annotation.uri.label" default="uri" />
+
+	</label>
+	<g:textField name="uri" value="${annotationInstance?.uri}"/>
+</div>
+
 <div class="fieldcontain ${hasErrors(bean: annotationInstance, field: 'username', 'error')} ">
 	<label for="username">
 		<g:message code="annotation.username.label" default="Username" />
