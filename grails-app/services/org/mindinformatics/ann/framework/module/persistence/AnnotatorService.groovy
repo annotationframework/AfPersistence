@@ -208,15 +208,23 @@ class AnnotatorService {
      * @return a list of annotations that match the given parameters
      */
     def search(params) {
-        log.info  "Search with params: " + params
+        println  "Search with params: " + params
         def query = Annotation.where {
             ((deleted == false || deleted == null) && (archived == false || archived == null))
             if (params.uri) uri == params.uri
             if (params.media) media == params.media
             if (params.quote) quote =~ "%" + params.quote + "%"
             if (params.text) text =~ "%" + params.text + "%"
-            if (params.userid) userid == params.userid
-            if (params.username) username == params.username
+            if (params.userid) {
+                //userid == params.userid
+                println params.list("userid")
+                userid in params.list("userid")
+            }
+            if (params.username) {
+                println params.list("username")
+                //username == params.username
+                username in params.list("username")
+            }
             if (params.source) source == params.source
             if (params.contextId) contextId == params.contextId
             if (params.collectionId) collectionId == params.collectionId
@@ -318,56 +326,6 @@ class AnnotatorService {
         return jwsObject.serialize()
     }
 
-    /**
-     *
-     * @param token
-     * @return
-    def verifyToken(token) {
-        def jwsObject = JWSObject.parse(token);
-        JWSVerifier verifier = new MACVerifier(SHARED_KEY.getBytes());
-        println "Payload: ${jwsObject.payload}"
-        return jwsObject.verify(verifier)
-    }
-     */
-
-    /**
-     * Generate a token to be used by the annotator client.  Not used at the moment.
-     *
-     * See https://github.com/okfn/annotator/wiki/Authentication
-    def generateToken() {
-        // Create JWS payload
-        Payload payload = new Payload("Hello world!");
-
-        // Create JWS header with HS256 algorithm
-        JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
-        header.setContentType("text/plain");
-
-        // Create JWS object
-        JWSObject jwsObject = new JWSObject(header, payload);
-
-        // Create HMAC signer
-        String sharedKey = "our-shared-key";
-        JWSSigner signer = new MACSigner(sharedKey.getBytes());
-        jwsObject.sign(signer);
-
-        // Serialise JWS object to compact format
-        String s = jwsObject.serialize();
-        println("Serialised JWS object: " + s);
-
-        // Parse back and check signature
-        jwsObject = JWSObject.parse(s);
-
-        JWSVerifier verifier = new MACVerifier(sharedKey.getBytes());
-        boolean verifiedSignature = jwsObject.verify(verifier);
-        if (verifiedSignature)
-            println("Verified JWS signature!");
-        else
-            println("Bad JWS signature!");
-
-        println("Recovered payload message: " + jwsObject.getPayload());
-        return jwsObject.getPayload()
-    }
-     */
 
     def cleanUpGorm() {
         def session = sessionFactory.currentSession

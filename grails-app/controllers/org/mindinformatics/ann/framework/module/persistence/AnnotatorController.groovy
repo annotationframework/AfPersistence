@@ -104,10 +104,6 @@ class AnnotatorController {
      * @return
      */
     def search() {
-        //println params
-        //def jsonObject = request.JSON
-        //uri, media, text, userid, source, parentid, offset, limit
-        //params.uri, params.media, params.text, params.user, params.source, params.parent,
         params.limit = params.limit?:10
         params.offset = params.offset?:0
         def results = annotatorService.search(params)

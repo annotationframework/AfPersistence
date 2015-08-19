@@ -1,28 +1,21 @@
 package org.mindinformatics.ann.framework.module.persistence
 
+import grails.buildtestdata.mixin.Build
 import grails.converters.JSON
 import grails.test.mixin.*
 import org.apache.commons.codec.binary.Base64
+import org.codehaus.groovy.grails.web.servlet.mvc.GrailsParameterMap
+import org.codehaus.groovy.grails.web.util.TypeConvertingMap
 import org.junit.*
+import org.mindinformatics.ann.framework.module.security.systems.SystemApi
 
 /**
  * See the API for {@link grails.test.mixin.services.ServiceUnitTestMixin} for usage instructions
  */
 @TestFor(AnnotatorService)
-@Mock([Annotation,Tag])
+@Mock([Annotation,Tag,SystemApi])
+@Build(SystemApi)
 class AnnotatorServiceTests {
-
-    @Test
-    void generateToken_shouldGenerateAndVerifyToken() {
-        def calendar = Calendar.getInstance()
-        calendar.set(2013, 1, 1)
-        def issuedAt = calendar.getTime()
-        def actualToken = service.getToken("openannotation", "jmiranda", 86400, issuedAt)
-        println actualToken
-
-        assertTrue service.verifyToken(actualToken)
-    }
-
 
     @Test
     void createAnnotation_shouldCreateAnnotation() {
@@ -248,7 +241,7 @@ class AnnotatorServiceTests {
                 "uri":"https://courses.edx.org/courses/HarvardX/AI12.2x/2013_SOND/courseware/fe939c73594e454da10d734884e54db2/016f704dd546408998ab2c2545878d89/",
                 "quote":"The place where the great city stands is not the place of stretch’d wharves, d",
                 "permissions":{"update":["jcm62@columbia.edu"],"admin":["jcm62@columbia.edu"],"delete":["jcm62@columbia.edu"],"read":[]},
-                "user":{"id":"jcm62@columbia.edu","name":"jmiranda"},
+                "user":{"id":"justin.miranda@gmail.com","name":"justin.miranda"},
                 "media":"text"
             }
         """
@@ -277,30 +270,74 @@ class AnnotatorServiceTests {
             }
         """
 
+        def annotationJson4 = """
+            {
+                "tags":["anaphora"],
+                "text":"<p>Tha anaphoora here grabs our attention early in the poem calls on the listener to pay attention<\\/p>\\n<p><strong><em>{NB this annotation appears at the befinning of Blood AXE as well assection 42 of Song of myself. I cant delete it from one without it being deleted from both}<\\/em><\\/strong><\\/p>\\n<p>&nbsp;<\\/p>",
+                "uri":"https://courses.edx.org/courses/HarvardX/AI12.2x/2013_SOND/courseware/fe939c73594e454da10d734884e54db2/016f704dd546408998ab2c2545878d89/",
+                "quote":"The place where the great city stands is not the place of stretch’d wharves, d",
+                "permissions":{"update":["lduarte1991@gmail.com"],"admin":["lduarte1991@gmail.com"],"delete":["lduarte1991@gmail.com"],"read":[]},
+                "user":{"id":"lduarte1991@gmail.com","name":"lduarte"},
+                "media":"text"
+            }
+        """
+
+
         def jsonObject1 = JSON.parse(annotationJson1)
         def jsonObject2 = JSON.parse(annotationJson2)
         def jsonObject3 = JSON.parse(annotationJson3)
+        def jsonObject4 = JSON.parse(annotationJson4)
 
         def annotation1 = service.create(jsonObject1)
         def annotation2 = service.create(jsonObject2)
         def annotation3 = service.create(jsonObject3)
+        def annotation4 = service.create(jsonObject4)
 
 
         def annotations = Annotation.list()
-        assert annotations.size() == 3
-        println annotations*.id
-        annotations.each {
-            println it.id + " " + it.tags*.name
-        }
+        assert annotations.size() == 4
 
-        def params = ["tag":"anaphora"]
-        def results = service.search(params)
+        // Search by tag
+        def params1 = ["tag":"anaphora"]
+        def results = service.search(params1)
         assert results != null
-        assert results.totalCount == 3
-        assert results.annotations.size() == 3
+        assert results.totalCount == 4
+        assert results.annotations.size() == 4
         assert annotations.contains(annotation1)
         assert annotations.contains(annotation2)
         assert annotations.contains(annotation3)
+
+        // Search by username
+        def params2 = new GrailsParameterMap(["username":"jmiranda"], null)
+        results = service.search(params2)
+        assert results != null
+        assert results.totalCount == 2
+        assert results.annotations.size() == 2
+        assert annotations.contains(annotation2)
+        assert annotations.contains(annotation3)
+
+
+        // Search by userid
+        def params3 = new GrailsParameterMap(["userid":"jcm62@columbia.edu"], null)
+        results = service.search(params3)
+        assert results != null
+        assert results.totalCount == 2
+        assert results.annotations.size() == 2
+        assert annotations.contains(annotation2)
+        assert annotations.contains(annotation3)
+
+        // Search by multiple users
+        def params4 = new GrailsParameterMap(["username":"jmiranda", "username":"lduarte"], null)
+        params4.put("username", "jmiranda")
+        params4.put("username", "lduarte")
+        println "params4: " + params4
+        results = service.search(params4)
+        assert results != null
+        assert results.totalCount == 3
+        assert results.annotations.size() == 3
+        assert annotations.contains(annotation2)
+        assert annotations.contains(annotation3)
+        assert annotations.contains(annotation4)
 
 
     }
