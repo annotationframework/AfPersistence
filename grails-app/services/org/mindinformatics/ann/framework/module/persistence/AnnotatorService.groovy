@@ -219,7 +219,7 @@ class AnnotatorService {
                 userid in params.list("userid")
             }
             else if (params.list("userid[]")) {
-                userid in params.list("userid")
+                userid in params.list("userid[]")
             }
             if (params.username) {
                 username in params.list("username")
