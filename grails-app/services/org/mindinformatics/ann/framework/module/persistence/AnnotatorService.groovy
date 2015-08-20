@@ -216,14 +216,16 @@ class AnnotatorService {
             if (params.quote) quote =~ "%" + params.quote + "%"
             if (params.text) text =~ "%" + params.text + "%"
             if (params.userid) {
-                //userid == params.userid
-                println params.list("userid")
+                userid in params.list("userid")
+            }
+            else if (params.list("userid[]")) {
                 userid in params.list("userid")
             }
             if (params.username) {
-                println params.list("username")
-                //username == params.username
                 username in params.list("username")
+            }
+            else if (params.list("username[]")) {
+                username in params.list("username[]")
             }
             if (params.source) source == params.source
             if (params.contextId) contextId == params.contextId
