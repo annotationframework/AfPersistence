@@ -44,7 +44,6 @@ class AnnotatorService {
 
         log.info "User: " + jsonObject?.user?.class
 
-        def parent = jsonObject.parent ? Annotation.get(jsonObject.parent) : null
         def annotation = new Annotation()
         annotation.uri = jsonObject.uri
         annotation.text = jsonObject.text
@@ -63,9 +62,15 @@ class AnnotatorService {
             annotation.username = jsonObject?.user?.name
         }
         annotation.json = jsonObject.toString()
+
+        // Set the parent if one has been passed in
+        def parent = jsonObject.parent ? Annotation.load(jsonObject.parent) : null
         annotation.parent = parent
+
         // FIXME As a workaround we need to save the annotation before we can add tags to it
         annotation.save(flush:true)
+
+        // Add tags to the annotation and save again
         println "Adding tags " + jsonObject.tags
         if (jsonObject.tags) {
             updateTags(annotation, jsonObject.tags)
@@ -98,7 +103,7 @@ class AnnotatorService {
             if (jsonObject.contextId) annotation.contextId = jsonObject.contextId
 
             if (jsonObject.parent) {
-                annotation.parent = Annotation.get(jsonObject.parent)
+                annotation.parent = Annotation.load(jsonObject.parent)
             }
             if (jsonObject.tags) {
                 updateTags(annotation, jsonObject.tags)
@@ -238,7 +243,7 @@ class AnnotatorService {
                 dateCreated <= params.dateCreatedOnOrBefore
             }
             if (params.parentid) {
-                def parentAnnotation = Annotation.get(params.parentid)
+                def parentAnnotation = Annotation.load(params.parentid)
                 parent == parentAnnotation
             }
             if (params.tag) {
