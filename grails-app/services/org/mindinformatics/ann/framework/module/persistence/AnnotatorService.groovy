@@ -64,7 +64,7 @@ class AnnotatorService {
         annotation.json = jsonObject.toString()
 
         // Set the parent if one has been passed in
-        def parent = jsonObject.parent ? Annotation.load(jsonObject.parent) : null
+        def parent = jsonObject.parent ? Annotation.get(jsonObject.parent) : null
         annotation.parent = parent
 
         // FIXME As a workaround we need to save the annotation before we can add tags to it
@@ -103,7 +103,7 @@ class AnnotatorService {
             if (jsonObject.contextId) annotation.contextId = jsonObject.contextId
 
             if (jsonObject.parent) {
-                annotation.parent = Annotation.load(jsonObject.parent)
+                annotation.parent = Annotation.get(jsonObject.parent)
             }
             if (jsonObject.tags) {
                 updateTags(annotation, jsonObject.tags)
