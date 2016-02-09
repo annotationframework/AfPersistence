@@ -212,14 +212,19 @@ class AnnotatorService {
      *
      * @return a list of annotations that match the given parameters
      */
-    def search(params) {
+    def search(params, uid) {
         println  "Search with params: " + params
         def query = Annotation.where {
+            // Annotation has not been deleted or archived
             ((deleted == false || deleted == null) && (archived == false || archived == null))
+
+            // Annotation matches basic attributes
             if (params.uri) uri == params.uri
             if (params.media) media == params.media
             if (params.quote) quote =~ "%" + params.quote + "%"
             if (params.text) text =~ "%" + params.text + "%"
+
+            // Annotation associated with a given user in parameter list
             if (params.userid) {
                 userid in params.list("userid")
             }
@@ -253,12 +258,28 @@ class AnnotatorService {
             }
         }
 
-        // FIXME Don't like that I need to do execute two queries here
-        def results = query.list([offset: params.offset, max: params.limit, sort:"dateCreated", order: "desc"])
-        //results = results.reverse()
         def totalCount = query.count();
+        def results = query.list([offset: params.offset, max: params.limit, sort:"dateCreated", order: "desc"])
 
-        return [annotations: results, totalCount: totalCount]
+        def annotations = []
+        if (uid) {
+            results.each { annotation ->
+                JSONObject json = annotation.toJSONObject()
+
+                boolean permissionsContainUid = (uid in json?.permissions?.read)
+                boolean permissionsEmpty = json?.permissions?.read?.empty
+
+                // Add annotation to results if
+                if (permissionsEmpty || permissionsContainUid) {
+                    annotations << annotation
+                }
+            }
+        }
+        else {
+            throw new IllegalArgumentException("Token does not contain a valid user ID")
+        }
+
+        return [totalCount: totalCount, size: annotations.size(), annotations: results]
     }
 
     /**

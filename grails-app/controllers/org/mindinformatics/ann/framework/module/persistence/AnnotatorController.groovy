@@ -19,6 +19,7 @@ import org.springframework.security.access.annotation.Secured
 class AnnotatorController {
 
     def annotatorService
+    def authTokenService
 
     static allowedMethods = [
             create:'POST',
@@ -106,11 +107,14 @@ class AnnotatorController {
     def search() {
         params.limit = params.limit?:10
         params.offset = params.offset?:0
-        def results = annotatorService.search(params)
+
+        def token = request.getHeader("x-annotator-auth-token")
+        def uid = authTokenService.getUid(token)
+        def results = annotatorService.search(params, uid)
 
         def rows = results.annotations.collect { it.toJSONObject() }
 
-        render ([total: results.totalCount, limit: params.limit, offset: params.offset, rows: rows] as JSON)
+        render ([total: results.totalCount, size: results.size, limit: params.limit, offset: params.offset, rows: rows] as JSON)
     }
 
     /**
