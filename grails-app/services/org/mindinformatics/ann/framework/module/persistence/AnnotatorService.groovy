@@ -279,7 +279,7 @@ class AnnotatorService {
             throw new IllegalArgumentException("Token does not contain a valid user ID")
         }
 
-        return [totalCount: totalCount, size: annotations.size(), annotations: results]
+        return [totalCount: totalCount, size: annotations.size(), annotations: annotations]
     }
 
     /**
