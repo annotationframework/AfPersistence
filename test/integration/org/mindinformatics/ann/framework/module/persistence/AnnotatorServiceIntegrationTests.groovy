@@ -35,8 +35,6 @@ class AnnotatorServiceIntegrationTests extends GroovyTestCase {
     }
 
 
-
-
     @Ignore
     void testSomething() {
         println "Testing something"

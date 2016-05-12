@@ -27,7 +27,10 @@ class AnnotatorController {
             update: ['POST','PUT'],
             archive: ['POST', 'PUT'],
             delete: ['POST', 'PUT', 'DELETE'],
+            stats: ['GET','POST'],
             search: ['GET','POST'],
+            statsSecure: ['GET','POST'],
+            searchSecure: ['GET','POST'],
             read: ['GET','POST'],
             random: ['GET']
         ]
@@ -91,6 +94,20 @@ class AnnotatorController {
         render (results as JSON)
     }
 
+    def stats() {
+        def results = annotatorService.search(params)
+        render ([totalCount: results.totalCount] as JSON)
+    }
+
+    def statsSecure() {
+        def token = request.getHeader("x-annotator-auth-token")
+        def uid = authTokenService.getUid(token)
+        def results = annotatorService.searchSecure(params, uid)
+        render ([totalCount: results.totalCount] as JSON)
+
+    }
+
+
     /**
      * GETs all annotations relevant to the query. Should return a JSON object with a rows property
      * containing an array of annotations.
@@ -108,14 +125,39 @@ class AnnotatorController {
         params.limit = params.limit?:10
         params.offset = params.offset?:0
 
-        def token = request.getHeader("x-annotator-auth-token")
-        def uid = authTokenService.getUid(token)
-        def results = annotatorService.search(params, uid)
+        def results = annotatorService.search(params)
 
         def rows = results.annotations.collect { it.toJSONObject() }
 
         render ([total: results.totalCount, size: results.size, limit: params.limit, offset: params.offset, rows: rows] as JSON)
     }
+
+    /**
+     * GETs all annotations relevant to the query. Should return a JSON object with a rows property
+     * containing an array of annotations.
+     *
+     * @param uri
+     * @param media
+     * @param text
+     * @param user
+     * @param source
+     * @param parent
+     *
+     * @return
+     */
+    def searchSecure() {
+        params.limit = params.limit?:10
+        params.offset = params.offset?:0
+
+        def token = request.getHeader("x-annotator-auth-token")
+        def uid = authTokenService.getUid(token)
+        def results = annotatorService.searchSecure(params, uid)
+
+        def rows = results.annotations.collect { it.toJSONObject() }
+
+        render ([total: results.totalCount, size: results.size, limit: params.limit, offset: params.offset, rows: rows] as JSON)
+    }
+
 
     /**
      * GETs annotations. Server should return an array of annotations serialised as JSON or JSON-LD.
@@ -244,6 +286,19 @@ class AnnotatorController {
             render annotation.toJSONObject() as JSON
         }
     }
+
+    /*
+    def migrate() {
+
+        params.max = 100
+        def annotations = Annotation.list(params)
+        annotations.each { annotation ->
+            log.info "Migrating annotation ${annotation.id}"
+            annotatorService.updatePermissions(annotation, annotation.toJSONObject())
+        }
+        render ([message:"Migrated 1000 annotations"] as JSON)
+    }
+    */
 
 
 }
