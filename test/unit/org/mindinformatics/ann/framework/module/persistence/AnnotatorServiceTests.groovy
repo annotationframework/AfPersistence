@@ -13,7 +13,7 @@ import org.mindinformatics.ann.framework.module.security.systems.SystemApi
  * See the API for {@link grails.test.mixin.services.ServiceUnitTestMixin} for usage instructions
  */
 @TestFor(AnnotatorService)
-@Mock([Annotation,Tag,SystemApi])
+@Mock([Annotation,AnnotationUser,AnnotationPermission,Tag,SystemApi])
 @Build(SystemApi)
 class AnnotatorServiceTests {
 
@@ -48,6 +48,7 @@ class AnnotatorServiceTests {
         assert annotation != null
         assert annotation.id != null
         assert annotation.tags.size() == 2
+        assert annotation.permissions?.size() == 3
     }
 
     @Test
@@ -240,7 +241,7 @@ class AnnotatorServiceTests {
                 "text":"<p>Tha anaphoora here grabs our attention early in the poem calls on the listener to pay attention<\\/p>\\n<p><strong><em>{NB this annotation appears at the befinning of Blood AXE as well assection 42 of Song of myself. I cant delete it from one without it being deleted from both}<\\/em><\\/strong><\\/p>\\n<p>&nbsp;<\\/p>",
                 "uri":"https://courses.edx.org/courses/HarvardX/AI12.2x/2013_SOND/courseware/fe939c73594e454da10d734884e54db2/016f704dd546408998ab2c2545878d89/",
                 "quote":"The place where the great city stands is not the place of stretch’d wharves, d",
-                "permissions":{"update":["jcm62@columbia.edu"],"admin":["jcm62@columbia.edu"],"delete":["jcm62@columbia.edu"],"read":[]},
+                "permissions":{"update":["jcm62@columbia.edu"],"admin":["jcm62@columbia.edu"],"delete":["jcm62@columbia.edu"],"read":["jcm62@columbia.edu"]},
                 "user":{"id":"justin.miranda@gmail.com","name":"justin.miranda"},
                 "media":"text"
             }
@@ -252,7 +253,7 @@ class AnnotatorServiceTests {
                 "text":"<p>Tha anaphoora here grabs our attention early in the poem calls on the listener to pay attention<\\/p>\\n<p><strong><em>{NB this annotation appears at the befinning of Blood AXE as well assection 42 of Song of myself. I cant delete it from one without it being deleted from both}<\\/em><\\/strong><\\/p>\\n<p>&nbsp;<\\/p>",
                 "uri":"https://courses.edx.org/courses/HarvardX/AI12.2x/2013_SOND/courseware/fe939c73594e454da10d734884e54db2/016f704dd546408998ab2c2545878d89/",
                 "quote":"The place where the great city stands is not the place of stretch’d wharves, d",
-                "permissions":{"update":["jcm62@columbia.edu"],"admin":["jcm62@columbia.edu"],"delete":["jcm62@columbia.edu"],"read":[]},
+                "permissions":{"update":["jcm62@columbia.edu"],"admin":["jcm62@columbia.edu"],"delete":["jcm62@columbia.edu"],"read":["jcm62@columbia.edu"]},
                 "user":{"id":"jcm62@columbia.edu","name":"jmiranda"},
                 "media":"text"
             }
@@ -264,7 +265,7 @@ class AnnotatorServiceTests {
                 "text":"<p>Tha anaphoora here grabs our attention early in the poem calls on the listener to pay attention<\\/p>\\n<p><strong><em>{NB this annotation appears at the befinning of Blood AXE as well assection 42 of Song of myself. I cant delete it from one without it being deleted from both}<\\/em><\\/strong><\\/p>\\n<p>&nbsp;<\\/p>",
                 "uri":"https://courses.edx.org/courses/HarvardX/AI12.2x/2013_SOND/courseware/fe939c73594e454da10d734884e54db2/016f704dd546408998ab2c2545878d89/",
                 "quote":"The place where the great city stands is not the place of stretch’d wharves, d",
-                "permissions":{"update":["jcm62@columbia.edu"],"admin":["jcm62@columbia.edu"],"delete":["jcm62@columbia.edu"],"read":[]},
+                "permissions":{"update":["justin.miranda@gmail.com"],"admin":["justin.miranda@gmail.com"],"delete":["justin.miranda@gmail.com"],"read":["justin.miranda@gmail.com"]},
                 "user":{"id":"jcm62@columbia.edu","name":"jmiranda"},
                 "media":"text"
             }
@@ -298,7 +299,7 @@ class AnnotatorServiceTests {
         assert annotations.size() == 4
 
         // Search by tag
-        def params1 = ["tag":"anaphora"]
+        def params1 = new GrailsParameterMap(["tag":"anaphora"], null)
         def results = service.search(params1)
         assert results != null
         assert results.totalCount == 4
@@ -327,9 +328,7 @@ class AnnotatorServiceTests {
         assert annotations.contains(annotation3)
 
         // Search by multiple users
-        def params4 = new GrailsParameterMap(["username":"jmiranda", "username":"lduarte"], null)
-        params4.put("username", "jmiranda")
-        params4.put("username", "lduarte")
+        def params4 = new GrailsParameterMap(["username":["jmiranda","lduarte"]], null)
         println "params4: " + params4
         results = service.search(params4)
         assert results != null
@@ -338,6 +337,18 @@ class AnnotatorServiceTests {
         assert annotations.contains(annotation2)
         assert annotations.contains(annotation3)
         assert annotations.contains(annotation4)
+
+        def params5 = new GrailsParameterMap(["username":"jmiranda"], null)
+        println "params5: " + params5
+        results = service.search(params5, "jcm62@columbia.edu")
+        assert results != null
+        assert results.totalCount == 1
+        assert results.annotations.size() == 1
+        assert annotations.contains(annotation2)
+        //assert annotations.contains(annotation3)
+
+        //assert annotations.contains(annotation3)
+        //assert annotations.contains(annotation4)
 
 
     }
