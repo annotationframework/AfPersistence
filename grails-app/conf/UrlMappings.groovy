@@ -13,6 +13,10 @@ class UrlMappings {
 		}
 
         "/"(view:"/info")
-		"500"(view:'/error')
+		"401"(controller: 'error', action: 'unauthorized')
+		"403"(controller: 'error', action: 'forbidden')
+		"404"(controller: 'error', action: 'notFound')
+		"405"(controller: 'error', action: 'methodNotAllowed')
+		"500"(controller: 'error', action: 'serverError')
 	}
 }
