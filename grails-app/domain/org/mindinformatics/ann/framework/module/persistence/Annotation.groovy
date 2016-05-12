@@ -29,10 +29,10 @@ class Annotation {
     Boolean archived
     Date dateCreated
     Date lastUpdated
-    User owner
+    AnnotationUser owner
 
     static transients = ["comments"]
-    static hasMany = [tags : Tag]
+    static hasMany = [tags : Tag, permissions: AnnotationPermission]
 
     static constraints = {
         uri(nullable: false, size: 1..2048)

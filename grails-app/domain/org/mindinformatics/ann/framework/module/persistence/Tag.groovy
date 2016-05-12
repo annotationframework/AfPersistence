@@ -22,14 +22,7 @@ class Tag {
 
     @Override
     public String toString() {
-
         return "${id}:${name}"
-        //final ReflectionToStringBuilder reflectionToStringBuilder = new ReflectionToStringBuilder(this);
-        //reflectionToStringBuilder.setAppendStatics(true);
-        //reflectionToStringBuilder.setAppendTransients(true);
-        //reflectionToStringBuilder.setExcludeFieldNames(["contentStreamLength", "password"]);
-        //return reflectionToStringBuilder.toString();
-
     }
 
     @Override
