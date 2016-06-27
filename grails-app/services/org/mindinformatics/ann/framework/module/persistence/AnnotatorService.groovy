@@ -76,7 +76,7 @@ class AnnotatorService {
 
         log.info "Adding permissions " + jsonObject.permissions
         if (jsonObject.permissions) {
-            updatePermissions(annotation, jsonObject.permissions)
+            updatePermissions(annotation, jsonObject)
         }
 
         annotation.save(failOnError: true)
@@ -576,5 +576,46 @@ class AnnotatorService {
         return count;
     }
 
+
+    def exampleQuery() {
+        def query = Annotation.where {
+            id < 1000 && parent != null
+        }
+        return query.list(sort: "parent.id", order: "desc")
+    }
+
+    def exampleQuery2() {
+        def query = Annotation.where { isEmpty("permissions") }
+        return query.list(max: 10, sort: "id", order: "desc")
+    }
+
+
+    def migrateAnnotations() {
+        long startTime = System.currentTimeMillis()
+        int count = 1
+        def annotations = Annotation.where { isNotNull("permissions") }.list([max:1000])
+        log.info "Found ${annotations.size()} annotations to migrate"
+
+        // Use collect in order to avoid ConcurrentModificationException
+        annotations.collect().each { annotation ->
+            if(annotation.json) {
+                def jsonObject = JSON.parse(annotation.json)
+                if (jsonObject.permissions) {
+                    log.info "Updating permissions ${jsonObject.permissions} for annotation ${annotation.id}"
+                    //updateTags(annotation, jsonObject.tags)
+                    updatePermissions(annotation, jsonObject.permissions)
+                    count++
+                }
+                else {
+                    log.info "No permissions for annotation ${annotation.id}"
+
+                }
+                if (count % 100 == 0) {
+                    log.info "Refreshed ${count} of ${annotations?.size()?:0} annotations: " + (System.currentTimeMillis() - startTime) + " ms"
+                    cleanUpGorm()
+                }
+            }
+        }
+    }
 
 }
