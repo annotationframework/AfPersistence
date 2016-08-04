@@ -8,7 +8,7 @@ hibernate {
     cache.use_second_level_cache = true
     cache.use_query_cache = false
     cache.region.factory_class = 'net.sf.ehcache.hibernate.EhCacheRegionFactory'
-    show_sql = true
+    show_sql = false
     format_sql = true
     use_sql_comments = true
 
@@ -36,16 +36,16 @@ environments {
     }
     test {
         dataSource {
-            //dbCreate = "update"
-            //url = "jdbc:h2:mem:testDb;MVCC=TRUE;LOCK_TIMEOUT=10000"
+            dbCreate = "create-drop"
+            url = "jdbc:h2:mem:testDb;MVCC=TRUE;LOCK_TIMEOUT=10000"
 
-            pooled = true
+            //pooled = true
             //dbCreate = "create-drop"
-            driverClassName = "com.mysql.jdbc.Driver"
-            dialect = org.hibernate.dialect.MySQL5InnoDBDialect
-            url = "jdbc:mysql://localhost:3306/catch?useUnicode=yes&characterEncoding=UTF-8&autoReconnect=true"
-            username = "catch"
-            password = "catch"
+            //driverClassName = "com.mysql.jdbc.Driver"
+            //dialect = org.hibernate.dialect.MySQL5InnoDBDialect
+            //url = "jdbc:mysql://localhost:3306/catch?useUnicode=yes&characterEncoding=UTF-8&autoReconnect=true"
+            //username = "catch"
+            //password = "catch"
 
 
         }
