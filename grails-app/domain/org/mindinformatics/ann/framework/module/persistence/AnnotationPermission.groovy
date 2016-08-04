@@ -9,14 +9,12 @@ import org.mindinformatics.ann.framework.module.org.mindinformatics.ann.framewor
 @EqualsAndHashCode(includeFields=true)
 class AnnotationPermission {
 
-    Annotation annotation
     AnnotationUser user
     Permission permission
 
     static belongsTo = [annotation : Annotation]
 
     static constraints = {
-        annotation nullable: false
         permission nullable: false
         user nullable: true
     }

@@ -69,6 +69,8 @@ class Annotation {
         text sqlType:"text"
         quote sqlType:"text"
 
+        permissions cascade: 'all-delete-orphan'
+
     }
 
     def getComments() {

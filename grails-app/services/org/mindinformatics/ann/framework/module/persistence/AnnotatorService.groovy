@@ -210,12 +210,12 @@ class AnnotatorService {
 
         if (jsonObject.permissions) {
 
-            // If the annotation already has permissions, we need to clear them
+            // If the annotation already has permissions, we need to clear them so we can add the new ones
             if (annotation.permissions) {
                 annotation.permissions.clear()
             }
 
-            // Iterate over user-provide permissions and
+            // Iterate over user-provide permissions, lookup user/permission, and add new ACL entry to annotation
             jsonObject.permissions.each { permissionId, userIds ->
                 if (userIds) {
                     userIds.each { userId ->
@@ -227,18 +227,25 @@ class AnnotatorService {
                             }
                         }
 
+                        Permission permission = Permission.findById(permissionId)
+                        if (!permission) {
+                            throw new RuntimeException("Permission ${permissionId} is not recognized.")
+                        }
+
                         // Create a new ACL entry
                         AnnotationPermission annotationPermission = new AnnotationPermission()
-                        annotationPermission.annotation = annotation
+                        annotationPermission.permission = permission
                         annotationPermission.user = user
-                        annotationPermission.permission = Permission.findById(permissionId)
 
                         // Add ACL entry to annotation
                         annotation.addToPermissions(annotationPermission)
-                        annotation.save(flush: true)
+
                     }
                 }
             }
+
+            // Save all changes to the annotation
+            annotation.save(flush: true)
         }
     }
 
@@ -395,8 +402,9 @@ class AnnotatorService {
 
         // Get annotations
         def baseQuery = buildQuery(queryParams, false)
+        log.info "Base Query: " + baseQuery
+        log.info "Query params: " + queryParams
         def annotations = Annotation.executeQuery(baseQuery, queryParams);
-
 
         // Get total count
         def countQuery = buildQuery(queryParams, true)
@@ -404,7 +412,6 @@ class AnnotatorService {
 
 
         return [totalCount: totalCount[0], size: annotations.size(), annotations: annotations]
-
     }
 
     /**
@@ -457,7 +464,7 @@ class AnnotatorService {
             LEFT OUTER JOIN annotation.tags AS tag
             WHERE (annotation.deleted = false OR annotation.deleted is null)
             AND (annotation.archived = false OR annotation.archived is null)
-            AND (permission.permission = 'read' AND (user.userId = :uid OR user.userId = 'group:__world__')))
+            AND (permission.permission = 'read' AND (user.userId = :uid OR user.userId = 'group:__world__'))
             """
 
         if (queryParams.uri) { query += " AND annotation.uri = :uri" }
