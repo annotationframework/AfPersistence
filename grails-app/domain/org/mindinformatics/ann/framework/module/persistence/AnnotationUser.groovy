@@ -1,5 +1,10 @@
 package org.mindinformatics.ann.framework.module.persistence
 
+import groovy.transform.EqualsAndHashCode
+import groovy.transform.ToString
+
+@ToString
+@EqualsAndHashCode(includeFields=true)
 class AnnotationUser {
 
     String userId
@@ -11,6 +16,4 @@ class AnnotationUser {
         username nullable: true
         email nullable: true
     }
-
-
 }

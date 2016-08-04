@@ -1,12 +1,16 @@
 package org.mindinformatics.ann.framework.module.persistence
 
 import grails.converters.JSON
+import groovy.transform.EqualsAndHashCode
+import groovy.transform.ToString
 import org.apache.commons.lang.builder.ReflectionToStringBuilder
 import org.codehaus.groovy.grails.web.json.JSONObject
 import org.mindinformatics.ann.framework.module.security.users.User
 
 import java.text.SimpleDateFormat
 
+//@ToString(includes = ["id", "uri", "source", "text", "quote", "username", "userid"])
+@EqualsAndHashCode(includeFields=true)
 class Annotation {
 
     String text
