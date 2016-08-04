@@ -2,13 +2,14 @@ package org.mindinformatics.ann.framework.module.persistence
 
 import grails.test.mixin.*
 import org.junit.Test
+import org.mindinformatics.ann.framework.module.org.mindinformatics.ann.framework.module.persistence.Permission
 import org.mindinformatics.ann.framework.module.persistence.Annotation
 
 /**
  * See the API for {@link grails.test.mixin.domain.DomainClassUnitTestMixin} for usage instructions
  */
 @TestFor(Annotation)
-@Mock([Tag,Annotation])
+@Mock([Tag,Annotation, AnnotationUser, AnnotationPermission])
 class AnnotationTests {
 
     @Test
@@ -116,8 +117,42 @@ class AnnotationTests {
         annotation1.save(failOnError:true)
         assertNotNull annotation1.toString()
 
-
-
     }
+
+    @Test
+    void equalsAndHashCode_shouldReturnTrueIfAllFieldsAreEqual() {
+        def annotation1 = new Annotation(text:"text", quote:"quote",uri:"http://sampleuri.com",media:"media",source:"source")
+        def annotation2 = new Annotation(text:"text", quote:"quote",uri:"http://sampleuri.com",media:"media",source:"source")
+        assertTrue annotation1.equals(annotation2)
+    }
+
+    @Test
+    void equalsAndHashCode_shouldReturnTrueIfIdsDoNotMatch() {
+        def annotation1 = new Annotation(id: "1", text:"text", quote:"quote",uri:"http://sampleuri.com",media:"media",source:"source")
+        def annotation2 = new Annotation(id: "2", text:"text", quote:"quote",uri:"http://sampleuri.com",media:"media",source:"source")
+        assertTrue annotation1.equals(annotation2)
+    }
+
+    @Test
+    void equalsAndHashCode_shouldReturnFalseWhenDifferent() {
+        def annotation1 = new Annotation(text:"text", quote:"quote",uri:"http://sampleuri.com",media:"media",source:"source")
+        def annotation2 = new Annotation(text:"different text", quote:"different quote",uri:"http://notthesameuri.com",media:"different media",source:"different source")
+        assertFalse annotation1.equals(annotation2)
+    }
+
+    @Test
+    void addPermission_shouldNotAddDuplicateAnnotationPermissions() {
+        def annotation1 = new Annotation(text:"text", quote:"quote",uri:"http://sampleuri.com",media:"media",source:"source")
+        def annotationUser1 = new AnnotationUser(userId: "user1")
+        def annotationPermission1 = new AnnotationPermission(user: annotationUser1, annotation: annotation1, permission: Permission.READ)
+        def annotationPermission2 = new AnnotationPermission(user: annotationUser1, annotation: annotation1, permission: Permission.READ)
+
+        annotation1.addToPermissions(annotationPermission1)
+        annotation1.addToPermissions(annotationPermission2)
+
+        assertEquals 1, annotation1.permissions.size()
+    }
+
+
 
 }

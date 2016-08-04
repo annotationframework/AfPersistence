@@ -338,18 +338,35 @@ class AnnotatorServiceTests {
         assert annotations.contains(annotation3)
         assert annotations.contains(annotation4)
 
-        def params5 = new GrailsParameterMap(["username":"jmiranda"], null)
-        println "params5: " + params5
-        results = service.search(params5, "jcm62@columbia.edu")
-        assert results != null
-        assert results.totalCount == 1
-        assert results.annotations.size() == 1
-        assert annotations.contains(annotation2)
-        //assert annotations.contains(annotation3)
+        // FIXME String-based queries like [executeQuery] are currently not supported in this implementation of GORM. Use criteria instead.
+//        def params5 = new GrailsParameterMap(["username":"jmiranda"], null)
+//        results = service.searchSecure(params5, "jcm62@columbia.edu")
+//        assert results != null
+//        assert results.totalCount == 1
+//        assert results.annotations.size() == 1
+    }
 
-        //assert annotations.contains(annotation3)
-        //assert annotations.contains(annotation4)
 
+    @Test
+    void createAndUpdate_shouldNotSaveDuplicatePermissions() {
+        def jsonString = """
+            {
+                "tags":["anaphora"],
+                "text":"<p>Tha anaphoora here grabs our attention early in the poem calls on the listener to pay attention<\\/p>\\n<p><strong><em>{NB this annotation appears at the befinning of Blood AXE as well assection 42 of Song of myself. I cant delete it from one without it being deleted from both}<\\/em><\\/strong><\\/p>\\n<p>&nbsp;<\\/p>",
+                "uri":"https://courses.edx.org/courses/HarvardX/AI12.2x/2013_SOND/courseware/fe939c73594e454da10d734884e54db2/016f704dd546408998ab2c2545878d89/",
+                "quote":"The place where the great city stands is not the place of stretch’d wharves, d",
+                "permissions":{"update":["jcm62@columbia.edu"],"admin":["jcm62@columbia.edu"],"delete":["jcm62@columbia.edu"],"read":["jcm62@columbia.edu"]},
+                "user":{"id":"justin.miranda@gmail.com","name":"justin.miranda"},
+                "media":"text"
+            }
+        """
+
+        def jsonObject = JSON.parse(jsonString)
+        def annotation = service.create(jsonObject)
+        assert annotation != null
+        assert annotation.id == 1
+        assert annotation.tags.size() == 1
+        assert annotation.permissions.size() == 4
 
     }
 

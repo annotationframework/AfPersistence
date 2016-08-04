@@ -201,16 +201,24 @@ class AnnotatorService {
      */
     def updatePermissions(Annotation annotation, jsonObject) {
         println "Update permissions " + jsonObject
+
+        // If there's no read permission, we need to add a default
+        if (!jsonObject.permissions["read"]) {
+            jsonObject.permissions["read"] = ['group:__world__']
+        }
+
+
         if (jsonObject.permissions) {
+
+            // If the annotation already has permissions, we need to clear them
             if (annotation.permissions) {
                 annotation.permissions.clear()
             }
 
+            // Iterate over user-provide permissions and
             jsonObject.permissions.each { permissionId, userIds ->
-                println "Adding permission ${permissionId} for users ${userIds}"
                 if (userIds) {
                     userIds.each { userId ->
-                        println "Adding permission ${permissionId} for ${userId}"
                         AnnotationUser user = AnnotationUser.findByUserId(userId)
                         if (!user) {
                             user = new AnnotationUser(userId: userId)
@@ -218,10 +226,14 @@ class AnnotatorService {
                                 throw new RuntimeException("User with user id ${userId} was not found.")
                             }
                         }
+
+                        // Create a new ACL entry
                         AnnotationPermission annotationPermission = new AnnotationPermission()
                         annotationPermission.annotation = annotation
                         annotationPermission.user = user
                         annotationPermission.permission = Permission.findById(permissionId)
+
+                        // Add ACL entry to annotation
                         annotation.addToPermissions(annotationPermission)
                         annotation.save(flush: true)
                     }
@@ -377,15 +389,36 @@ class AnnotatorService {
     }
 
 
-    def searchSecure (params, uid) {
+    def searchSecure (Map params, String uid) {
 
-        def queryParams = [:]
+        def queryParams = buildQueryParams(params, uid)
+
+        // Get annotations
+        def baseQuery = buildQuery(queryParams, false)
+        def annotations = Annotation.executeQuery(baseQuery, queryParams);
 
 
-        // We need to do this parameter cleansing because otherwise we end up with these annoying exceptions
-        // (e.g. QueryParameterException: could not locate named parameter [action]) for every http parameter that is
-        // not mapped in the query (action, controller, limit, etc). There's probably a better (more Groovy) way to
-        // do this, but this'll work for now.
+        // Get total count
+        def countQuery = buildQuery(queryParams, true)
+        def totalCount = Annotation.executeQuery(countQuery, queryParams);
+
+
+        return [totalCount: totalCount[0], size: annotations.size(), annotations: annotations]
+
+    }
+
+    /**
+     *  We need to do this parameter cleansing because otherwise we end up with these annoying exceptions
+     * (e.g. QueryParameterException: could not locate named parameter [action]) for every http parameter that is
+     * not mapped in the query (action, controller, limit, etc). There's probably a better (more Groovy) way to
+     * do this, but this'll work for now.
+     *
+     * @param params
+     * @param uid
+     * @return
+     */
+    Map buildQueryParams(Map params, String uid) {
+        Map queryParams = [:]
 
         if (uid) queryParams.uid = uid
         if (params.limit) queryParams.max = params.limit
@@ -403,72 +436,50 @@ class AnnotatorService {
         if (params.dateCreatedOnOrAfter) queryParams.dateCreatedOnOrAfter = params.dateCreatedOnOrAfter
         if (params.dateCreatedOnOrBefore) queryParams.dateCreatedOnOrBefore = params.dateCreatedOnOrBefore
 
+        return queryParams
 
-        def baseQuery = """
-            SELECT distinct(annotation)
+    }
+
+    String buildQuery(Map queryParams, boolean isCountQuery) {
+        def query = ""
+
+        if (!isCountQuery) {
+            query += "SELECT distinct(annotation) "
+        }
+        else {
+            query += "SELECT count(distinct annotation.id) "
+        }
+
+        query += """
             FROM Annotation AS annotation
             LEFT OUTER JOIN annotation.permissions AS permission
             LEFT OUTER JOIN permission.user AS user
             LEFT OUTER JOIN annotation.tags AS tag
             WHERE (annotation.deleted = false OR annotation.deleted is null)
             AND (annotation.archived = false OR annotation.archived is null)
-            AND ((user IS NULL) OR (permission.permission = 'read' AND (user.userId = :uid OR user.userId = 'group:__world__')))
+            AND (permission.permission = 'read' AND (user.userId = :uid OR user.userId = 'group:__world__')))
             """
 
-        if (params.uri) { baseQuery += " AND annotation.uri = :uri" }
-        if (params.media) { baseQuery += " AND annotation.media = :media" }
-        if (params.quote) { baseQuery += " AND annotation.quote = :quote" }
-        if (params.text) { baseQuery += " AND annotation.text = :text" }
-        if (params.userids) { baseQuery += " AND annotation.userid IN :userids" }
-        if (params.usernames) { baseQuery += " AND annotation.username IN :usernames" }
-        if (params.source) { baseQuery += " AND annotation.source = :source" }
-        if (params.contextId) { baseQuery += " AND annotation.contextId = :contextId" }
-        if (params.collectionId) { baseQuery += " AND annotation.collectionId = :collectionId" }
-        if (params.parentid) { baseQuery += " AND annotation.parentid = :parentid" }
-        if (params.tag) { baseQuery += " AND tag.name LIKE :tag" }
-        if (params.dateCreatedOnOrAfter) { baseQuery += " AND annotation.dateCreated >= :dateCreatedOnOrAfter" }
-        if (params.dateCreatedOnOrBefore) { baseQuery += " AND annotation.dateCreated <= :dateCreatedOnOrBefore" }
-        baseQuery += " ORDER by annotation.dateCreated desc"
+        if (queryParams.uri) { query += " AND annotation.uri = :uri" }
+        if (queryParams.media) { query += " AND annotation.media = :media" }
+        if (queryParams.quote) { query += " AND annotation.quote = :quote" }
+        if (queryParams.text) { query += " AND annotation.text = :text" }
+        if (queryParams.userids) { query += " AND annotation.userid IN :userids" }
+        if (queryParams.usernames) { query += " AND annotation.username IN :usernames" }
+        if (queryParams.source) { query += " AND annotation.source = :source" }
+        if (queryParams.contextId) { query += " AND annotation.contextId = :contextId" }
+        if (queryParams.collectionId) { query += " AND annotation.collectionId = :collectionId" }
+        if (queryParams.parentid) { query += " AND annotation.parentid = :parentid" }
+        if (queryParams.tag) { query += " AND tag.name LIKE :tag" }
+        if (queryParams.dateCreatedOnOrAfter) { query += " AND annotation.dateCreated >= :dateCreatedOnOrAfter" }
+        if (queryParams.dateCreatedOnOrBefore) { query += " AND annotation.dateCreated <= :dateCreatedOnOrBefore" }
 
-        def annotations = Annotation.executeQuery(baseQuery, queryParams);
+        if (!isCountQuery) {
+            query += " ORDER by annotation.dateCreated desc"
+        }
 
-
-        // WHERE
-        // permission.user IS NULL OR
-        // (permission.permission = 'read' AND (permission.user.userId = :uid OR permission.user.userId = 'group:__world__'))
-
-
-        def countQuery = """
-            SELECT count(distinct annotation.id)
-            FROM Annotation AS annotation
-            LEFT OUTER JOIN annotation.permissions AS permission
-            LEFT OUTER JOIN permission.user AS user
-            LEFT OUTER JOIN annotation.tags AS tag
-            WHERE (annotation.deleted = false OR annotation.deleted is null)
-            AND (annotation.archived = false OR annotation.archived is null)
-            AND ((user IS NULL) OR (permission.permission = 'read' AND (user.userId = :uid OR user.userId = 'group:__world__')))
-            """
-
-        if (params.uri) { countQuery += " AND annotation.uri = :uri" }
-        if (params.media) { countQuery += " AND annotation.media = :media" }
-        if (params.quote) { countQuery += " AND annotation.quote = :quote" }
-        if (params.text) { countQuery += " AND annotation.text = :text" }
-        if (params.userids) { countQuery += " AND annotation.userid IN :userids" }
-        if (params.usernames) { countQuery += " AND annotation.username IN :usernames" }
-        if (params.source) { countQuery += " AND annotation.source = :source" }
-        if (params.contextId) { countQuery += " AND annotation.contextId = :contextId" }
-        if (params.collectionId) { countQuery += " AND annotation.collectionId = :collectionId" }
-        if (params.parentid) { countQuery += " AND annotation.parentid = :parentid" }
-        if (params.tag) { countQuery += " AND tag.name LIKE :tag" }
-        if (params.dateCreatedOnOrAfter) { countQuery += " AND annotation.dateCreated >= :dateCreatedOnOrAfter" }
-        if (params.dateCreatedOnOrBefore) { countQuery += " AND annotation.dateCreated <= :dateCreatedOnOrBefore" }
-        countQuery += " ORDER by annotation.dateCreated desc"
-
-        def totalCount = Annotation.executeQuery(countQuery, queryParams);
-
-
-        return [totalCount: totalCount[0], size: annotations.size(), annotations: annotations]
-
+        log.info("Query: " + query)
+        return query
     }
 
 
@@ -576,25 +587,11 @@ class AnnotatorService {
         return count;
     }
 
-
-    def exampleQuery() {
-        def query = Annotation.where {
-            id < 1000 && parent != null
-        }
-        return query.list(sort: "parent.id", order: "desc")
-    }
-
-    def exampleQuery2() {
-        def query = Annotation.where { isEmpty("permissions") }
-        return query.list(max: 10, sort: "id", order: "desc")
-    }
-
-
     def migrateAnnotations() {
         long startTime = System.currentTimeMillis()
         int count = 1
-        def annotations = Annotation.where { isNotNull("permissions") }.list([max:1000])
-        log.info "Found ${annotations.size()} annotations to migrate"
+        def annotations = [] //Annotation.where { isNotNull("permissions") }.list([max:1000])
+        log.debug "Found ${annotations.size()} annotations to migrate"
 
         // Use collect in order to avoid ConcurrentModificationException
         annotations.collect().each { annotation ->
