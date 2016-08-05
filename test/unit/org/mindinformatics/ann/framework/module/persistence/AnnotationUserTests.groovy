@@ -10,10 +10,9 @@ import org.junit.*
 @TestFor(AnnotationUser)
 class AnnotationUserTests {
 
-    void testSomething() {
-        //fail "Implement me"
-
+    @Test
+    void validate_shouldReturnTrueWhenAllFieldsAreEmpty() {
         AnnotationUser user = new AnnotationUser()
-        assertTrue !user.validate()
+        assertTrue user.validate()
     }
 }

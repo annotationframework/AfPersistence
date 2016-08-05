@@ -44,8 +44,8 @@ class AnnotationPermissionTests {
         def annotation2 = new Annotation(text:"different text", quote:"different quote",uri:"http://differenturi.com",media:"different media",source:"different source")
         def annotationUser1 = new AnnotationUser(userId: "user1")
         def annotationPermission1 = new AnnotationPermission(user: annotationUser1, annotation: annotation1, permission: Permission.READ)
-        def annotationPermission2 = new AnnotationPermission(user: annotationUser1, annotation: annotation1, permission: Permission.READ)
-        assertFalse annotationPermission1.equals(annotationPermission2)
+        def annotationPermission2 = new AnnotationPermission(user: annotationUser1, annotation: annotation2, permission: Permission.READ)
+        assertTrue annotationPermission1.equals(annotationPermission2)
     }
 
     @Test
