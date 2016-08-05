@@ -22,7 +22,7 @@ class AnnotationPermissionTests {
     void validate_shouldReturnTrueWhenAllFieldsArePopulated() {
         def annotation1 = new Annotation(text:"text", quote:"quote",uri:"http://sampleuri.com",media:"media",source:"source")
         def annotationUser1 = new AnnotationUser(userId: "user1")
-        def annotationPermission1 = new AnnotationPermission(user: annotationUser1, annotation: annotation1, Permission.READ)
+        def annotationPermission1 = new AnnotationPermission(user: annotationUser1, annotation: annotation1, permission: Permission.READ)
         assertTrue annotationPermission1.validate()
     }
 
@@ -31,8 +31,8 @@ class AnnotationPermissionTests {
     void equalsAndHashCode_shouldReturnTrueIfAllFieldsAreEqual() {
         def annotation1 = new Annotation(text:"text", quote:"quote",uri:"http://sampleuri.com",media:"media",source:"source")
         def annotationUser1 = new AnnotationUser(userId: "user1")
-        def annotationPermission1 = new AnnotationPermission(user: annotationUser1, annotation: annotation1, Permission.READ)
-        def annotationPermission2 = new AnnotationPermission(user: annotationUser1, annotation: annotation1, Permission.READ)
+        def annotationPermission1 = new AnnotationPermission(user: annotationUser1, annotation: annotation1, permission: Permission.READ)
+        def annotationPermission2 = new AnnotationPermission(user: annotationUser1, annotation: annotation1, permission: Permission.READ)
 
         assertTrue annotationPermission1.equals(annotationPermission2)
     }
@@ -43,8 +43,8 @@ class AnnotationPermissionTests {
         def annotation1 = new Annotation(text:"text", quote:"quote",uri:"http://sampleuri.com",media:"media",source:"source")
         def annotation2 = new Annotation(text:"different text", quote:"different quote",uri:"http://differenturi.com",media:"different media",source:"different source")
         def annotationUser1 = new AnnotationUser(userId: "user1")
-        def annotationPermission1 = new AnnotationPermission(user: annotationUser1, annotation: annotation1, Permission.READ)
-        def annotationPermission2 = new AnnotationPermission(user: annotationUser1, annotation: annotation2, Permission.READ)
+        def annotationPermission1 = new AnnotationPermission(user: annotationUser1, annotation: annotation1, permission: Permission.READ)
+        def annotationPermission2 = new AnnotationPermission(user: annotationUser1, annotation: annotation1, permission: Permission.READ)
         assertFalse annotationPermission1.equals(annotationPermission2)
     }
 
@@ -53,8 +53,8 @@ class AnnotationPermissionTests {
         def annotation1 = new Annotation(text:"text", quote:"quote",uri:"http://sampleuri.com",media:"media",source:"source")
         def annotation2 = new Annotation(text:"text", quote:"quote",uri:"http://sampleuri.com",media:"media",source:"source")
         def annotationUser1 = new AnnotationUser(userId: "user1")
-        def annotationPermission1 = new AnnotationPermission(user: annotationUser1, annotation: annotation1, Permission.READ)
-        def annotationPermission2 = new AnnotationPermission(user: annotationUser1, annotation: annotation2, Permission.ADMIN)
+        def annotationPermission1 = new AnnotationPermission(user: annotationUser1, annotation: annotation1, permission: Permission.READ)
+        def annotationPermission2 = new AnnotationPermission(user: annotationUser1, annotation: annotation2, permission: Permission.ADMIN)
         assertFalse annotationPermission1.equals(annotationPermission2)
     }
 

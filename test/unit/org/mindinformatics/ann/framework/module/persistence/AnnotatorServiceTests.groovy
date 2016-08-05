@@ -48,7 +48,7 @@ class AnnotatorServiceTests {
         assert annotation != null
         assert annotation.id != null
         assert annotation.tags.size() == 2
-        assert annotation.permissions?.size() == 3
+        assert annotation.permissions.size() == 4
     }
 
     @Test
