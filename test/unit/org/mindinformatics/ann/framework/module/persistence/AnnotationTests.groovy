@@ -1,14 +1,16 @@
 package org.mindinformatics.ann.framework.module.persistence
 
 import grails.test.mixin.*
+import org.junit.Ignore
 import org.junit.Test
+import org.mindinformatics.ann.framework.module.org.mindinformatics.ann.framework.module.persistence.Permission
 import org.mindinformatics.ann.framework.module.persistence.Annotation
 
 /**
  * See the API for {@link grails.test.mixin.domain.DomainClassUnitTestMixin} for usage instructions
  */
 @TestFor(Annotation)
-@Mock([Tag,Annotation])
+@Mock([Tag, Annotation, AnnotationUser, AnnotationPermission])
 class AnnotationTests {
 
     @Test
@@ -109,17 +111,49 @@ class AnnotationTests {
 
         //def json2 = '{"tags":["longs"],"citation":"Wu, Jingzi, 1701-1754. The Scholars. [Translated by Yang Hsien-yi and Gladys Yang. Author\'s port. and illus. by Cheng Shih-fa] Peking, Foreign Languages Press, 1957. Pages 49-51","text":"","created":"2014-06-29T07:25:07.498Z","updated":"2014-06-29T07:25:07.498Z","quote":"Xia","ranges":[{"endOffset":346,"start":"/textannotation[1]/p[10]","end":"/textannotation[1]/p[10]","startOffset":343}],"permissions":{"update":["micazorla@yahoo.es"],"admin":["micazorla@yahoo.es"],"delete":["micazorla@yahoo.es"],"read":[]},"parent":"0","uri":"https://courses.edx.org/courses/HarvardX/SW12.6x/2T2014/courseware/f9ec9c0c7bb8498d814684358b6e8b0f/0134825cf0f34fd68516ff4018d3ead4/1","media":"text","user":{"id":"micazorla@yahoo.es","name":"Mila1969"}}'
 
-        //def annotation1 = new Annotation(text:"my comment 6", quote:"quote6",uri:"http://afdemo.aws.af.cm/annotation/index",media:"text",source:"source6")
-
-
+        def annotation1 = new Annotation(text:"my comment 6", quote:"quote6",uri:"http://afdemo.aws.af.cm/annotation/index",media:"text",source:"source6")
         annotation1.userid = "justin.miranda@gmail.com"
         annotation1.json = json1
         annotation1.addToTags(name: "tag1")
         annotation1.save(failOnError:true)
         assertNotNull annotation1.toString()
 
-
-
     }
+
+    @Ignore
+    void equalsAndHashCode_shouldReturnTrueIfAllFieldsAreEqual() {
+        def annotation1 = new Annotation(text:"text", quote:"quote",uri:"http://sampleuri.com",media:"media",source:"source")
+        def annotation2 = new Annotation(text:"text", quote:"quote",uri:"http://sampleuri.com",media:"media",source:"source")
+        assertTrue annotation1.equals(annotation2)
+    }
+
+    @Ignore
+    void equalsAndHashCode_shouldReturnTrueIfIdsDoNotMatch() {
+        def annotation1 = new Annotation(id: "1", text:"text", quote:"quote",uri:"http://sampleuri.com",media:"media",source:"source")
+        def annotation2 = new Annotation(id: "2", text:"text", quote:"quote",uri:"http://sampleuri.com",media:"media",source:"source")
+        assertTrue annotation1.equals(annotation2)
+    }
+
+    @Test
+    void equalsAndHashCode_shouldReturnFalseWhenDifferent() {
+        def annotation1 = new Annotation(text:"text", quote:"quote",uri:"http://sampleuri.com",media:"media",source:"source")
+        def annotation2 = new Annotation(text:"different text", quote:"different quote",uri:"http://notthesameuri.com",media:"different media",source:"different source")
+        assertFalse annotation1.equals(annotation2)
+    }
+
+    @Ignore
+    void addPermission_shouldNotAddDuplicateAnnotationPermissions() {
+        def annotation1 = new Annotation(text:"text", quote:"quote",uri:"http://sampleuri.com",media:"media",source:"source")
+        def annotationUser1 = new AnnotationUser(userId: "user1")
+        def annotationPermission1 = new AnnotationPermission(user: annotationUser1, annotation: annotation1, permission: Permission.READ)
+        def annotationPermission2 = new AnnotationPermission(user: annotationUser1, annotation: annotation1, permission: Permission.READ)
+
+        annotation1.addToPermissions(annotationPermission1)
+        annotation1.addToPermissions(annotationPermission2)
+
+        assertEquals 1, annotation1.permissions.size()
+    }
+
+
 
 }
