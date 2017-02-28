@@ -5,7 +5,7 @@ grails.project.target.level = 1.6
 grails.project.source.level = 1.6
 //grails.project.war.file = "target/${appName}-${appVersion}.war"
 
-grails.plugin.location.'af-security' = '../../annotationframework/AfSecurity'
+//grails.plugin.location.'af-security' = '../../annotationframework/AfSecurity'
 
 grails.project.dependency.resolution = {
     // inherit Grails' default dependencies
